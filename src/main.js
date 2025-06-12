@@ -1,4 +1,3 @@
-// src/main.js
 import { createApp } from 'vue'
 import App from './App.vue'
 
@@ -8,6 +7,7 @@ import 'primevue/resources/primevue.min.css'
 import 'primeicons/primeicons.css'
 import 'primeflex/primeflex.css'
 
+// PrimeVue Components
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dropdown from 'primevue/dropdown'
@@ -18,11 +18,13 @@ import MultiSelect from 'primevue/multiselect'
 import Panel from 'primevue/panel'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
+import Button from 'primevue/button'
 
 const app = createApp(App)
 
 app.use(PrimeVue)
 
+// Register components globally
 app.component('DataTable', DataTable)
 app.component('Column', Column)
 app.component('Dropdown', Dropdown)
@@ -33,5 +35,6 @@ app.component('MultiSelect', MultiSelect)
 app.component('Panel', Panel)
 app.component('TabView', TabView)
 app.component('TabPanel', TabPanel)
+app.component('Button', Button)
 
 app.mount('#app')
