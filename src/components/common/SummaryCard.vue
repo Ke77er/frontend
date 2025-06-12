@@ -60,6 +60,7 @@ const cardClass = computed(() => `summary-card--${props.color}`)
   gap: 1rem;
   transition: all 0.3s ease;
   border-left: 4px solid;
+  min-height: 100px;
 }
 
 .summary-card:hover {
@@ -96,6 +97,7 @@ const cardClass = computed(() => `summary-card--${props.color}`)
   justify-content: center;
   font-size: 1.5rem;
   color: white;
+  flex-shrink: 0;
 }
 
 .summary-card--primary .card-icon {
@@ -120,6 +122,7 @@ const cardClass = computed(() => `summary-card--${props.color}`)
 
 .card-content {
   flex: 1;
+  min-width: 0;
 }
 
 .card-title {
@@ -127,17 +130,81 @@ const cardClass = computed(() => `summary-card--${props.color}`)
   color: #64748b;
   margin-bottom: 0.25rem;
   font-weight: 500;
+  word-wrap: break-word;
 }
 
 .card-value {
   font-size: 1.5rem;
   font-weight: 700;
   color: #1e293b;
+  word-wrap: break-word;
 }
 
 .numeric-value {
   font-size: 1.5rem;
   font-weight: 700;
   color: #1e293b;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .summary-card {
+    padding: 1.25rem;
+    gap: 0.75rem;
+    min-height: 90px;
+  }
+  
+  .card-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  
+  .card-title {
+    font-size: 0.85rem;
+  }
+  
+  .card-value {
+    font-size: 1.25rem;
+  }
+  
+  .numeric-value {
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-card {
+    padding: 1rem;
+    gap: 0.5rem;
+    min-height: 80px;
+  }
+  
+  .card-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+  
+  .card-title {
+    font-size: 0.8rem;
+    margin-bottom: 0.125rem;
+  }
+  
+  .card-value {
+    font-size: 1.1rem;
+  }
+  
+  .numeric-value {
+    font-size: 1.1rem;
+  }
+}
+
+/* Prevent hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .summary-card:hover {
+    transform: none;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  }
 }
 </style>

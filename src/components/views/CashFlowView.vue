@@ -46,47 +46,51 @@
       />
     </div>
 
-    <DataTable
-      :value="linhas"
-      class="cash-flow-table"
-      :paginator="true"
-      :rows="15"
-      responsiveLayout="scroll"
-      stripedRows
-      showGridlines
-      :loading="loading"
-    >
-      <Column field="descricao" header="Categoria" style="min-width: 300px">
-        <template #body="{ data }">
-          <div class="category-cell">
-            <span class="category-name">{{ data.descricao }}</span>
-          </div>
-        </template>
-      </Column>
-      
-      <Column field="realizado" header="Realizado" style="min-width: 150px">
-        <template #body="{ data }">
-          <ValueDisplay :value="data.realizado" type="currency" />
-        </template>
-      </Column>
-      
-      <Column field="previsto" header="Previsto" style="min-width: 150px">
-        <template #body="{ data }">
-          <ValueDisplay :value="data.previsto" type="currency" />
-        </template>
-      </Column>
-      
-      <Column field="total" header="Total" style="min-width: 150px">
-        <template #body="{ data }">
-          <ValueDisplay :value="data.realizado + data.previsto" type="currency" emphasis />
-        </template>
-      </Column>
-    </DataTable>
+    <div class="table-container">
+      <DataTable
+        :value="linhas"
+        class="cash-flow-table"
+        :paginator="true"
+        :rows="isMobile ? 10 : 15"
+        responsiveLayout="scroll"
+        stripedRows
+        showGridlines
+        :loading="loading"
+        :scrollable="true"
+        scrollHeight="flex"
+      >
+        <Column field="descricao" header="Categoria" :style="columnStyles.categoria">
+          <template #body="{ data }">
+            <div class="category-cell">
+              <span class="category-name">{{ data.descricao }}</span>
+            </div>
+          </template>
+        </Column>
+        
+        <Column field="realizado" header="Realizado" :style="columnStyles.valor">
+          <template #body="{ data }">
+            <ValueDisplay :value="data.realizado" type="currency" />
+          </template>
+        </Column>
+        
+        <Column field="previsto" header="Previsto" :style="columnStyles.valor">
+          <template #body="{ data }">
+            <ValueDisplay :value="data.previsto" type="currency" />
+          </template>
+        </Column>
+        
+        <Column field="total" header="Total" :style="columnStyles.valor">
+          <template #body="{ data }">
+            <ValueDisplay :value="data.realizado + data.previsto" type="currency" emphasis />
+          </template>
+        </Column>
+      </DataTable>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useCashFlowData } from '../../composables/useCashFlowData'
 import SummaryCard from '../common/SummaryCard.vue'
 import ValueDisplay from '../common/ValueDisplay.vue'
@@ -94,10 +98,17 @@ import ValueDisplay from '../common/ValueDisplay.vue'
 const modoMensal = ref(false)
 const inicio = ref(new Date())
 const loading = ref(false)
+const windowWidth = ref(window.innerWidth)
 
 const { generateCashFlowData } = useCashFlowData()
 
 const modeLabel = computed(() => modoMensal.value ? 'Mensal' : 'Diário')
+const isMobile = computed(() => windowWidth.value < 768)
+
+const columnStyles = computed(() => ({
+  categoria: isMobile.value ? 'min-width: 200px' : 'min-width: 300px',
+  valor: isMobile.value ? 'min-width: 100px' : 'min-width: 150px'
+}))
 
 const linhas = ref([])
 
@@ -121,12 +132,24 @@ const updateData = async () => {
   }
 }
 
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
+
 watch([modoMensal, inicio], updateData, { immediate: true })
 </script>
 
 <style scoped>
 .cash-flow-view {
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .view-header {
@@ -149,6 +172,7 @@ watch([modoMensal, inicio], updateData, { immediate: true })
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .mode-toggle :deep(.p-togglebutton) {
@@ -162,15 +186,21 @@ watch([modoMensal, inicio], updateData, { immediate: true })
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+}
+
+.table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: white;
 }
 
 .cash-flow-table {
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .cash-flow-table :deep(.p-datatable-header) {
@@ -200,20 +230,100 @@ watch([modoMensal, inicio], updateData, { immediate: true })
 .category-name {
   font-weight: 500;
   color: #334155;
+  word-break: break-word;
 }
 
+/* Mobile optimizations */
 @media (max-width: 768px) {
+  .cash-flow-view {
+    padding: 1rem;
+  }
+  
   .view-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .view-title h3 {
+    font-size: 1.25rem;
+    text-align: center;
   }
   
   .view-controls {
     justify-content: center;
+    gap: 0.75rem;
   }
   
   .summary-cards {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .cash-flow-table :deep(.p-datatable-thead > tr > th),
+  .cash-flow-table :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .cash-flow-table :deep(.p-paginator) {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .cash-flow-view {
+    padding: 0.75rem;
+  }
+  
+  .view-title h3 {
+    font-size: 1.1rem;
+  }
+  
+  .view-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .mode-toggle,
+  .date-picker {
+    width: 100%;
+  }
+  
+  .mode-toggle :deep(.p-togglebutton),
+  .date-picker :deep(.p-calendar .p-inputtext) {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .summary-cards {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .cash-flow-table :deep(.p-datatable-thead > tr > th),
+  .cash-flow-table :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .category-name {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .summary-cards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  
+  .view-controls {
+    flex-direction: row;
+    justify-content: center;
   }
 }
 </style>

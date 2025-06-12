@@ -32,50 +32,54 @@
       />
     </div>
 
-    <DataTable
-      :value="dadosFiltrados"
-      class="overdue-table"
-      :paginator="true"
-      :rows="10"
-      responsiveLayout="scroll"
-      stripedRows
-      showGridlines
-      :loading="loading"
-    >
-      <Column field="categoria" header="Categoria" style="min-width: 250px">
-        <template #body="{ data }">
-          <div class="category-cell">
-            <span class="category-name">{{ data.categoria }}</span>
-          </div>
-        </template>
-      </Column>
-      
-      <Column field="pessoa" header="Pessoa" style="min-width: 200px">
-        <template #body="{ data }">
-          <div class="person-cell">
-            <i class="pi pi-user"></i>
-            <span>{{ data.pessoa }}</span>
-          </div>
-        </template>
-      </Column>
-      
-      <Column field="vencimento" header="Vencimento" style="min-width: 120px">
-        <template #body="{ data }">
-          <DateDisplay :date="data.vencimento" showDaysOverdue />
-        </template>
-      </Column>
-      
-      <Column field="valor" header="Valor" style="min-width: 120px">
-        <template #body="{ data }">
-          <ValueDisplay :value="data.valor" type="currency" emphasis />
-        </template>
-      </Column>
-    </DataTable>
+    <div class="table-container">
+      <DataTable
+        :value="dadosFiltrados"
+        class="overdue-table"
+        :paginator="true"
+        :rows="isMobile ? 8 : 10"
+        responsiveLayout="scroll"
+        stripedRows
+        showGridlines
+        :loading="loading"
+        :scrollable="true"
+        scrollHeight="flex"
+      >
+        <Column field="categoria" header="Categoria" :style="columnStyles.categoria">
+          <template #body="{ data }">
+            <div class="category-cell">
+              <span class="category-name">{{ data.categoria }}</span>
+            </div>
+          </template>
+        </Column>
+        
+        <Column field="pessoa" header="Pessoa" :style="columnStyles.pessoa">
+          <template #body="{ data }">
+            <div class="person-cell">
+              <i class="pi pi-user"></i>
+              <span>{{ data.pessoa }}</span>
+            </div>
+          </template>
+        </Column>
+        
+        <Column field="vencimento" header="Vencimento" :style="columnStyles.data">
+          <template #body="{ data }">
+            <DateDisplay :date="data.vencimento" showDaysOverdue />
+          </template>
+        </Column>
+        
+        <Column field="valor" header="Valor" :style="columnStyles.valor">
+          <template #body="{ data }">
+            <ValueDisplay :value="data.valor" type="currency" emphasis />
+          </template>
+        </Column>
+      </DataTable>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useOverdueData } from '../../composables/useOverdueData'
 import SummaryCard from '../common/SummaryCard.vue'
 import ValueDisplay from '../common/ValueDisplay.vue'
@@ -83,6 +87,7 @@ import DateDisplay from '../common/DateDisplay.vue'
 
 const tipo = ref('Receber')
 const loading = ref(false)
+const windowWidth = ref(window.innerWidth)
 
 const tipoOptions = [
   { label: 'A Receber', value: 'Receber' },
@@ -91,6 +96,33 @@ const tipoOptions = [
 
 const { getOverdueData } = useOverdueData()
 
+const isMobile = computed(() => windowWidth.value < 768)
+
+const columnStyles = computed(() => {
+  if (windowWidth.value < 480) {
+    return {
+      categoria: 'min-width: 150px',
+      pessoa: 'min-width: 120px',
+      data: 'min-width: 100px',
+      valor: 'min-width: 100px'
+    }
+  } else if (windowWidth.value < 768) {
+    return {
+      categoria: 'min-width: 180px',
+      pessoa: 'min-width: 150px',
+      data: 'min-width: 120px',
+      valor: 'min-width: 120px'
+    }
+  } else {
+    return {
+      categoria: 'min-width: 250px',
+      pessoa: 'min-width: 200px',
+      data: 'min-width: 120px',
+      valor: 'min-width: 120px'
+    }
+  }
+})
+
 const dadosFiltrados = computed(() => {
   return getOverdueData(tipo.value)
 })
@@ -98,11 +130,23 @@ const dadosFiltrados = computed(() => {
 const totalValue = computed(() => {
   return dadosFiltrados.value.reduce((sum, item) => sum + Math.abs(item.valor), 0)
 })
+
+const handleResize = () => {
+  windowWidth.value = window.innerWidth
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style scoped>
 .overdue-view {
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
 .view-header {
@@ -132,15 +176,21 @@ const totalValue = computed(() => {
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+}
+
+.table-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: white;
 }
 
 .overdue-table {
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .overdue-table :deep(.p-datatable-thead > tr > th) {
@@ -168,6 +218,7 @@ const totalValue = computed(() => {
 .category-name {
   font-weight: 500;
   color: #334155;
+  word-break: break-word;
 }
 
 .person-cell {
@@ -177,14 +228,92 @@ const totalValue = computed(() => {
   color: #64748b;
 }
 
+/* Mobile optimizations */
 @media (max-width: 768px) {
+  .overdue-view {
+    padding: 1rem;
+  }
+  
   .view-header {
     flex-direction: column;
     align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .view-title h3 {
+    font-size: 1.25rem;
+    text-align: center;
+  }
+  
+  .type-dropdown {
+    min-width: 100%;
   }
   
   .summary-cards {
     grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .overdue-table :deep(.p-datatable-thead > tr > th),
+  .overdue-table :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  .person-cell {
+    gap: 0.25rem;
+  }
+  
+  .person-cell i {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .overdue-view {
+    padding: 0.75rem;
+  }
+  
+  .view-title h3 {
+    font-size: 1.1rem;
+  }
+  
+  .summary-cards {
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .overdue-table :deep(.p-datatable-thead > tr > th),
+  .overdue-table :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .category-name {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+  
+  .person-cell {
+    font-size: 0.8rem;
+  }
+}
+
+/* Landscape mobile optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .view-header {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  .type-dropdown {
+    min-width: 150px;
   }
 }
 </style>
