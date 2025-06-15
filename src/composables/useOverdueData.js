@@ -1,14 +1,18 @@
-import { computed } from 'vue'
 import { useDataService } from './useDataService'
 import { useReadonlyParametros } from './useParametros'
 
 export function useOverdueData() {
   const { getFilteredData } = useDataService()
-  const { categoriasSelecionadas, contasSelecionadas } = useReadonlyParametros()
+  const { categoriasSelecionadas, contasSelecionadas, dataInicio, dataFim } = useReadonlyParametros()
   
   const getOverdueData = (tipo) => {
     const hoje = new Date()
-    const filteredData = getFilteredData(categoriasSelecionadas.value, contasSelecionadas.value)
+    const filteredData = getFilteredData(
+      categoriasSelecionadas.value, 
+      contasSelecionadas.value,
+      dataInicio.value,
+      dataFim.value
+    )
     
     return filteredData
       .filter((item) => {

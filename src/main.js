@@ -19,6 +19,8 @@ import Panel from 'primevue/panel'
 import TabView from 'primevue/tabview'
 import TabPanel from 'primevue/tabpanel'
 import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
+import Tag from 'primevue/tag'
 
 const app = createApp(App)
 
@@ -36,5 +38,7 @@ app.component('Panel', Panel)
 app.component('TabView', TabView)
 app.component('TabPanel', TabPanel)
 app.component('Button', Button)
+app.component('Dialog', Dialog)
+app.component('Tag', Tag)
 
 app.mount('#app')
