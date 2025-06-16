@@ -139,11 +139,30 @@ export function useCashFlowData() {
     
     const hoje = new Date()
     
-    return filteredData
-      .filter(item => {
-        const itemCategoria = `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`
-        return itemCategoria === categoria
-      })
+    // Filtrar dados específicos para a categoria e período selecionados
+    const detailsData = filteredData.filter(item => {
+      const itemCategoria = `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`
+      if (itemCategoria !== categoria) return false
+      
+      const dataItem = new Date(item.data_ymd)
+      
+      // Verificar se o item pertence ao período específico
+      if (periodo.type === 'realizado' && periodo.isCurrentMonth) {
+        // Mês atual - realizado: só itens baixados do mês atual
+        return isSameMonth(dataItem, periodo.date) && item.baixado === true
+      } else if (periodo.type === 'previsto' && periodo.isCurrentMonth) {
+        // Mês atual - previsto: só itens não baixados do mês atual
+        return isSameMonth(dataItem, periodo.date) && item.baixado !== true
+      } else if (periodo.key.includes('-')) {
+        // Período diário
+        return isSameDay(dataItem, periodo.date)
+      } else {
+        // Período mensal (não mês atual)
+        return isSameMonth(dataItem, periodo.date)
+      }
+    })
+    
+    return detailsData
       .map(item => ({
         data: item.data_ymd,
         pessoa: item.pessoa_erp_descricao,

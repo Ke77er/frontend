@@ -1,87 +1,111 @@
 <template>
   <div class="cash-flow-view">
-    <div class="view-header">
-      <div class="view-title">
-        <h3>Fluxo de Caixa Diário</h3>
-        <p class="view-subtitle">
-          Período: {{ formatDateRange(dataInicio, dataFim) }}
-        </p>
+    <!-- Resumo Compacto -->
+    <div class="summary-section">
+      <div class="summary-cards">
+        <div class="summary-card success">
+          <div class="card-icon">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Realizado</div>
+            <div class="card-value">
+              <ValueDisplay :value="totals.realizado" type="currency" emphasis />
+            </div>
+          </div>
+        </div>
+        
+        <div class="summary-card warning">
+          <div class="card-icon">
+            <i class="pi pi-clock"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Previsto</div>
+            <div class="card-value">
+              <ValueDisplay :value="totals.previsto" type="currency" emphasis />
+            </div>
+          </div>
+        </div>
+        
+        <div class="summary-card" :class="totals.saldo >= 0 ? 'success' : 'danger'">
+          <div class="card-icon">
+            <i class="pi pi-wallet"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Saldo Total</div>
+            <div class="card-value">
+              <ValueDisplay :value="totals.saldo" type="currency" emphasis />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="period-info">
+        <i class="pi pi-calendar"></i>
+        <span>{{ formatDateRange(dataInicio, dataFim) }}</span>
       </div>
     </div>
 
-    <div class="summary-cards">
-      <SummaryCard
-        title="Total Realizado"
-        :value="totals.realizado"
-        icon="pi pi-check-circle"
-        color="success"
-      />
-      <SummaryCard
-        title="Total Previsto"
-        :value="totals.previsto"
-        icon="pi pi-clock"
-        color="warning"
-      />
-      <SummaryCard
-        title="Saldo Total"
-        :value="totals.saldo"
-        icon="pi pi-wallet"
-        :color="totals.saldo >= 0 ? 'success' : 'danger'"
-      />
-    </div>
-
-    <DataTable
-      :value="linhas"
-      class="cash-flow-table"
-      :paginator="true"
-      :rows="15"
-      responsiveLayout="scroll"
-      stripedRows
-      showGridlines
-      :loading="loading"
-      :scrollable="true"
-      scrollHeight="600px"
-    >
-      <Column field="categoria" header="Categoria" :frozen="true" style="min-width: 250px">
-        <template #body="{ data }">
-          <div class="category-cell">
-            <span class="category-name">{{ data.categoria }}</span>
-          </div>
-        </template>
-      </Column>
-      
-      <Column 
-        v-for="periodo in periodos" 
-        :key="periodo.key"
-        :field="periodo.key"
-        :header="periodo.label"
-        style="min-width: 120px"
-        :class="periodo.isCurrentMonth ? 'current-month-column' : ''"
+    <!-- Tabela de Fluxo -->
+    <div class="table-container">
+      <DataTable
+        :value="linhas"
+        class="cash-flow-table"
+        :paginator="true"
+        :rows="15"
+        responsiveLayout="scroll"
+        stripedRows
+        showGridlines
+        :loading="loading"
+        :scrollable="true"
+        scrollHeight="600px"
       >
-        <template #body="{ data }">
-          <div class="value-cell" @click="showDetails(data.categoria, periodo, data[periodo.key])">
-            <ValueDisplay 
-              :value="data[periodo.key] || 0" 
-              type="currency" 
-              :class="{ 'clickable-value': data[periodo.key] !== 0 }"
-            />
-          </div>
-        </template>
-      </Column>
-      
-      <Column field="total" header="Total" style="min-width: 150px" :frozen="true" alignFrozen="right">
-        <template #body="{ data }">
-          <ValueDisplay :value="data.total" type="currency" emphasis />
-        </template>
-      </Column>
-    </DataTable>
+        <Column field="categoria" header="Categoria" :frozen="true" style="min-width: 280px">
+          <template #body="{ data }">
+            <div class="category-cell">
+              <div class="category-icon">
+                <i class="pi pi-tag"></i>
+              </div>
+              <span class="category-name">{{ data.categoria }}</span>
+            </div>
+          </template>
+        </Column>
+        
+        <Column 
+          v-for="periodo in periodos" 
+          :key="periodo.key"
+          :field="periodo.key"
+          :header="periodo.label"
+          style="min-width: 140px"
+          :class="periodo.isCurrentMonth ? 'current-month-column' : ''"
+        >
+          <template #body="{ data }">
+            <div class="value-cell" @click="showDetails(data.categoria, periodo, data[periodo.key])">
+              <ValueDisplay 
+                :value="data[periodo.key] || 0" 
+                type="currency" 
+                :class="{ 'clickable-value': data[periodo.key] !== 0 }"
+              />
+            </div>
+          </template>
+        </Column>
+        
+        <Column field="total" header="Total" style="min-width: 160px" :frozen="true" alignFrozen="right">
+          <template #body="{ data }">
+            <div class="total-cell">
+              <ValueDisplay :value="data.total" type="currency" emphasis />
+            </div>
+          </template>
+        </Column>
+      </DataTable>
+    </div>
 
     <!-- Dialog de Detalhes -->
     <Dialog 
       v-model:visible="showDetailsDialog" 
       :header="detailsTitle"
       :modal="true"
-      :style="{ width: '600px' }"
+      :style="{ width: '700px' }"
       class="details-dialog"
     >
       <div class="details-content">
@@ -112,7 +136,7 @@
               <DateDisplay :date="data.data" />
             </template>
           </Column>
-          <Column field="pessoa" header="Pessoa" style="min-width: 150px" />
+          <Column field="pessoa" header="Pessoa" style="min-width: 180px" />
           <Column field="valor" header="Valor" style="min-width: 120px">
             <template #body="{ data }">
               <ValueDisplay :value="data.valor" type="currency" />
@@ -138,7 +162,6 @@ import { useCashFlowData } from '../../composables/useCashFlowData'
 import { useReadonlyParametros } from '../../composables/useParametros'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import SummaryCard from '../common/SummaryCard.vue'
 import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
 
@@ -223,42 +246,112 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
 
 <style scoped>
 .cash-flow-view {
-  padding: 2rem;
+  padding: 1.5rem;
 }
 
-.view-header {
+.summary-section {
   margin-bottom: 2rem;
-}
-
-.view-title h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #1e293b;
-}
-
-.view-subtitle {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.9rem;
 }
 
 .summary-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
-.cash-flow-table {
+.summary-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 2px 12px rgba(26, 54, 93, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  border-left: 4px solid;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(26, 54, 93, 0.12);
+}
+
+.summary-card.success {
+  border-left-color: var(--success-color);
+}
+
+.summary-card.warning {
+  border-left-color: var(--warning-color);
+}
+
+.summary-card.danger {
+  border-left-color: var(--danger-color);
+}
+
+.card-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: white;
+}
+
+.summary-card.success .card-icon {
+  background: linear-gradient(135deg, var(--success-color), var(--success-dark));
+}
+
+.summary-card.warning .card-icon {
+  background: linear-gradient(135deg, var(--warning-color), var(--warning-dark));
+}
+
+.summary-card.danger .card-icon {
+  background: linear-gradient(135deg, var(--danger-color), var(--danger-dark));
+}
+
+.card-content {
+  flex: 1;
+}
+
+.card-label {
+  font-size: 0.8rem;
+  color: var(--neutral-500);
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.card-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.period-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--neutral-600);
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: var(--neutral-50);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--neutral-200);
+}
+
+.table-container {
+  background: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(26, 54, 93, 0.08);
 }
 
 .cash-flow-table :deep(.p-datatable-thead > tr > th) {
-  background: #f1f5f9;
-  color: #475569;
+  background: var(--primary-color);
+  color: white;
   font-weight: 600;
   border: none;
   padding: 1rem;
@@ -268,44 +361,67 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
 }
 
 .cash-flow-table :deep(.current-month-column th) {
-  background: #dbeafe;
-  color: #1e40af;
+  background: var(--primary-light);
+  color: white;
 }
 
 .cash-flow-table :deep(.p-datatable-tbody > tr > td) {
   padding: 1rem;
-  border-color: #f1f5f9;
+  border-color: var(--neutral-200);
 }
 
 .category-cell {
   display: flex;
   align-items: center;
+  gap: 0.75rem;
+}
+
+.category-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.875rem;
 }
 
 .category-name {
   font-weight: 500;
-  color: #334155;
+  color: var(--primary-color);
 }
 
 .value-cell {
   cursor: default;
+  text-align: right;
+}
+
+.total-cell {
+  text-align: right;
+  background: var(--neutral-50);
+  border-radius: 6px;
+  padding: 0.5rem;
 }
 
 .clickable-value {
   cursor: pointer;
   transition: all 0.2s ease;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
 }
 
 .clickable-value:hover {
-  background: #f8fafc;
-  border-radius: 4px;
-  padding: 0.25rem;
-  margin: -0.25rem;
+  background: var(--primary-light);
+  color: white;
+  transform: scale(1.05);
 }
 
 .details-dialog :deep(.p-dialog-header) {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, var(--neutral-50) 0%, var(--neutral-100) 100%);
+  border-bottom: 1px solid var(--neutral-200);
+  color: var(--primary-color);
 }
 
 .details-content {
@@ -313,13 +429,14 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
 }
 
 .details-summary {
-  background: #f8fafc;
-  padding: 1rem;
+  background: var(--neutral-50);
+  padding: 1.5rem;
   border-radius: 8px;
   margin-bottom: 1.5rem;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1rem;
+  border: 1px solid var(--neutral-200);
 }
 
 .summary-item {
@@ -330,13 +447,13 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
 
 .summary-label {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--neutral-500);
   font-weight: 500;
 }
 
 .summary-value {
   font-weight: 600;
-  color: #334155;
+  color: var(--primary-color);
 }
 
 .details-table {

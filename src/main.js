@@ -21,6 +21,7 @@ import TabPanel from 'primevue/tabpanel'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Tag from 'primevue/tag'
+import Badge from 'primevue/badge'
 
 const app = createApp(App)
 
@@ -40,5 +41,6 @@ app.component('TabPanel', TabPanel)
 app.component('Button', Button)
 app.component('Dialog', Dialog)
 app.component('Tag', Tag)
+app.component('Badge', Badge)
 
 app.mount('#app')

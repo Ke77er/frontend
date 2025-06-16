@@ -1,111 +1,104 @@
 <template>
   <div class="filter-panel">
-    <div class="filter-header">
-      <h3 class="filter-title">
+    <div class="filter-header" @click="toggleExpanded">
+      <div class="filter-title">
         <i class="pi pi-filter"></i>
-        Filtros e Configurações
-      </h3>
+        <span>Filtros</span>
+        <Badge :value="activeFiltersCount" v-if="activeFiltersCount > 0" />
+      </div>
+      <Button
+        :icon="isExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+        class="p-button-text p-button-sm toggle-btn"
+      />
     </div>
     
-    <div class="filter-content">
-      <div class="filter-group">
-        <label class="filter-label">Empresa</label>
-        <Dropdown
-          v-model="empresaSelecionada"
-          :options="empresas"
-          option-label="label"
-          option-value="value"
-          placeholder="Selecionar empresa..."
-          class="filter-dropdown"
-        />
-      </div>
+    <div class="filter-content" :class="{ 'expanded': isExpanded }">
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label class="filter-label">Empresa</label>
+          <Dropdown
+            v-model="empresaSelecionada"
+            :options="empresas"
+            option-label="label"
+            option-value="value"
+            placeholder="Selecionar..."
+            class="filter-control"
+          />
+        </div>
 
-      <div class="filter-group">
-        <label class="filter-label">Período</label>
-        <div class="date-range-container">
-          <Calendar
-            v-model="dataInicio"
-            dateFormat="dd/mm/yy"
-            showIcon
-            placeholder="Data inicial"
-            class="date-input"
-          />
-          <span class="date-separator">até</span>
-          <Calendar
-            v-model="dataFim"
-            dateFormat="dd/mm/yy"
-            showIcon
-            placeholder="Data final"
-            class="date-input"
+        <div class="filter-group">
+          <label class="filter-label">Período</label>
+          <div class="date-controls">
+            <Calendar
+              v-model="dataInicio"
+              dateFormat="dd/mm/yy"
+              showIcon
+              placeholder="Início"
+              class="date-input"
+            />
+            <Calendar
+              v-model="dataFim"
+              dateFormat="dd/mm/yy"
+              showIcon
+              placeholder="Fim"
+              class="date-input"
+            />
+          </div>
+          <div class="quick-filters">
+            <Button
+              v-for="filter in quickFilters"
+              :key="filter.key"
+              @click="setQuickFilter(filter.key)"
+              :label="filter.label"
+              class="p-button-outlined p-button-sm quick-btn"
+              size="small"
+            />
+          </div>
+        </div>
+        
+        <div class="filter-group">
+          <label class="filter-label">Categorias</label>
+          <MultiSelect
+            v-model="categoriasSelecionadas"
+            :options="categorias"
+            option-label="label"
+            option-value="value"
+            placeholder="Todas"
+            class="filter-control"
+            :maxSelectedLabels="1"
+            selectedItemsLabel="{0} selecionadas"
           />
         </div>
-        <div class="quick-filters">
-          <Button
-            @click="setQuickFilter('hoje')"
-            label="Hoje"
-            class="p-button-outlined p-button-sm quick-btn"
-          />
-          <Button
-            @click="setQuickFilter('semana')"
-            label="Esta Semana"
-            class="p-button-outlined p-button-sm quick-btn"
-          />
-          <Button
-            @click="setQuickFilter('mes')"
-            label="Este Mês"
-            class="p-button-outlined p-button-sm quick-btn"
-          />
-          <Button
-            @click="setQuickFilter('trimestre')"
-            label="Trimestre"
-            class="p-button-outlined p-button-sm quick-btn"
+        
+        <div class="filter-group">
+          <label class="filter-label">Contas</label>
+          <MultiSelect
+            v-model="contasSelecionadas"
+            :options="contas"
+            option-label="label"
+            option-value="value"
+            placeholder="Todas"
+            class="filter-control"
+            :maxSelectedLabels="1"
+            selectedItemsLabel="{0} selecionadas"
           />
         </div>
-      </div>
-      
-      <div class="filter-group">
-        <label class="filter-label">Categorias</label>
-        <MultiSelect
-          v-model="categoriasSelecionadas"
-          :options="categorias"
-          option-label="label"
-          option-value="value"
-          placeholder="Selecionar categorias..."
-          class="filter-multiselect"
-          :maxSelectedLabels="2"
-          selectedItemsLabel="{0} categorias selecionadas"
-        />
-      </div>
-      
-      <div class="filter-group">
-        <label class="filter-label">Contas Financeiras</label>
-        <MultiSelect
-          v-model="contasSelecionadas"
-          :options="contas"
-          option-label="label"
-          option-value="value"
-          placeholder="Selecionar contas..."
-          class="filter-multiselect"
-          :maxSelectedLabels="2"
-          selectedItemsLabel="{0} contas selecionadas"
-        />
-      </div>
-      
-      <div class="filter-actions">
-        <Button
-          @click="clearFilters"
-          label="Limpar Filtros"
-          icon="pi pi-times"
-          class="p-button-outlined p-button-secondary"
-          size="small"
-        />
+        
+        <div class="filter-actions">
+          <Button
+            @click="clearFilters"
+            label="Limpar"
+            icon="pi pi-times"
+            class="p-button-outlined p-button-secondary p-button-sm"
+          />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useParametros } from '../../composables/useParametros'
 import { useDataService } from '../../composables/useDataService'
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter } from 'date-fns'
@@ -120,9 +113,29 @@ const {
 
 const { getUniqueCategories, getUniqueAccounts, getAvailableCompanies } = useDataService()
 
+const isExpanded = ref(false)
 const categorias = ref([])
 const contas = ref([])
 const empresas = ref([])
+
+const quickFilters = [
+  { key: 'hoje', label: 'Hoje' },
+  { key: 'semana', label: 'Semana' },
+  { key: 'mes', label: 'Mês' },
+  { key: 'trimestre', label: 'Trimestre' }
+]
+
+const activeFiltersCount = computed(() => {
+  let count = 0
+  if (categoriasSelecionadas.value.length > 0) count++
+  if (contasSelecionadas.value.length > 0) count++
+  if (empresaSelecionada.value && empresaSelecionada.value !== 'empresa1') count++
+  return count
+})
+
+const toggleExpanded = () => {
+  isExpanded.value = !isExpanded.value
+}
 
 const setQuickFilter = (periodo) => {
   const hoje = new Date()
@@ -150,8 +163,7 @@ const setQuickFilter = (periodo) => {
 const clearFilters = () => {
   categoriasSelecionadas.value = []
   contasSelecionadas.value = []
-  dataInicio.value = startOfMonth(new Date())
-  dataFim.value = endOfMonth(new Date())
+  setQuickFilter('mes')
 }
 
 const updateOptions = () => {
@@ -167,7 +179,6 @@ onMounted(() => {
     empresaSelecionada.value = empresas.value[0].value
   }
   
-  // Define período padrão como mês atual
   if (!dataInicio.value) {
     setQuickFilter('mes')
   }
@@ -180,30 +191,53 @@ onMounted(() => {
 .filter-panel {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px rgba(26, 54, 93, 0.08);
   overflow: hidden;
+  margin-bottom: 1.5rem;
 }
 
 .filter-header {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  padding: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--neutral-200);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.filter-header:hover {
+  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
 }
 
 .filter-title {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #334155;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 1rem;
+}
+
+.toggle-btn {
+  color: var(--primary-light);
 }
 
 .filter-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.filter-content.expanded {
+  max-height: 500px;
+}
+
+.filter-grid {
   padding: 1.5rem;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   align-items: start;
 }
@@ -216,13 +250,16 @@ onMounted(() => {
 
 .filter-label {
   font-weight: 600;
-  color: #475569;
-  font-size: 0.9rem;
+  color: var(--neutral-600);
+  font-size: 0.875rem;
 }
 
-.date-range-container {
+.filter-control {
+  min-width: 180px;
+}
+
+.date-controls {
   display: flex;
-  align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
@@ -230,12 +267,6 @@ onMounted(() => {
 .date-input {
   flex: 1;
   min-width: 120px;
-}
-
-.date-separator {
-  color: #64748b;
-  font-size: 0.9rem;
-  font-weight: 500;
 }
 
 .quick-filters {
@@ -246,31 +277,15 @@ onMounted(() => {
 }
 
 .quick-btn {
-  font-size: 0.8rem;
-  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-color: var(--primary-light);
+  color: var(--primary-light);
 }
 
-.filter-dropdown,
-.filter-multiselect {
-  min-width: 200px;
-}
-
-.filter-dropdown :deep(.p-dropdown),
-.filter-multiselect :deep(.p-multiselect) {
-  border-radius: 8px;
-  border: 2px solid #e2e8f0;
-  transition: all 0.3s ease;
-}
-
-.filter-dropdown :deep(.p-dropdown:hover),
-.filter-multiselect :deep(.p-multiselect:hover) {
-  border-color: #cbd5e1;
-}
-
-.filter-dropdown :deep(.p-dropdown.p-focus),
-.filter-multiselect :deep(.p-multiselect.p-focus) {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+.quick-btn:hover {
+  background: var(--primary-light);
+  color: white;
 }
 
 .filter-actions {
@@ -280,22 +295,17 @@ onMounted(() => {
 }
 
 @media (max-width: 1024px) {
-  .filter-content {
+  .filter-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
   
-  .date-range-container {
+  .date-controls {
     flex-direction: column;
-    align-items: stretch;
   }
   
   .date-input {
     min-width: 100%;
-  }
-  
-  .filter-actions {
-    justify-content: center;
   }
 }
 </style>

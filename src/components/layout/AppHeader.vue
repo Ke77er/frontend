@@ -6,13 +6,13 @@
           <div class="brand-icon">💼</div>
           <div class="brand-text">
             <h1 class="brand-title">Codex Finance</h1>
-            <p class="brand-subtitle">Sistema de Fluxo de Caixa</p>
+            <p class="brand-subtitle">Sistema de Gestão Financeira</p>
           </div>
         </div>
         
         <div class="header-info">
           <div class="last-update">
-            <i class="pi pi-clock text-sm"></i>
+            <i class="pi pi-clock"></i>
             <span>Última atualização: {{ lastUpdate }}</span>
           </div>
         </div>
@@ -29,10 +29,10 @@ const lastUpdate = ref('2025-02-28 10:51')
 
 <style scoped>
 .app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
   padding: 2rem 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(26, 54, 93, 0.15);
 }
 
 .container {
@@ -65,6 +65,7 @@ const lastUpdate = ref('2025-02-28 10:51')
   font-weight: 700;
   margin: 0;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  color: white;
 }
 
 .brand-subtitle {
@@ -72,6 +73,7 @@ const lastUpdate = ref('2025-02-28 10:51')
   margin: 0;
   opacity: 0.9;
   font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .header-info {
@@ -88,6 +90,7 @@ const lastUpdate = ref('2025-02-28 10:51')
   border-radius: 8px;
   backdrop-filter: blur(10px);
   font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 @media (max-width: 768px) {

@@ -72,14 +72,14 @@ const valueClass = computed(() => {
 }
 
 .value-display--positive {
-  color: #059669;
+  color: var(--success-color);
 }
 
 .value-display--negative {
-  color: #dc2626;
+  color: var(--danger-color);
 }
 
 .value-display--neutral {
-  color: #64748b;
+  color: var(--neutral-500);
 }
 </style>
