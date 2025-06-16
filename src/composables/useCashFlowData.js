@@ -132,18 +132,9 @@ export function useCashFlowData() {
   }
   
   const getDetailsForPeriod = async (categoria, periodo) => {
-    // Simula loading para melhor UX
-    await new Promise(resolve => setTimeout(resolve, 100))
-    
-    // Buscar dados atualizados sempre que a função for chamada
-    const { categoriasSelecionadas, contasSelecionadas, dataInicio, dataFim } = useReadonlyParametros()
-    const { getFilteredData } = useDataService()
-    
     const filteredData = getFilteredData(
       categoriasSelecionadas.value, 
-      contasSelecionadas.value,
-      dataInicio.value,
-      dataFim.value
+      contasSelecionadas.value
     )
     
     const hoje = new Date()
@@ -162,7 +153,7 @@ export function useCashFlowData() {
       } else if (periodo.type === 'previsto' && periodo.isCurrentMonth) {
         // Mês atual - previsto: só itens não baixados do mês atual
         return isSameMonth(dataItem, periodo.date) && item.baixado !== true
-      } else if (periodo.key.includes('-') && !periodo.key.includes('realizado') && !periodo.key.includes('previsto')) {
+      } else if (periodo.key.includes('-')) {
         // Período diário
         return isSameDay(dataItem, periodo.date)
       } else {

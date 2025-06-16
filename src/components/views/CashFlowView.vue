@@ -130,7 +130,6 @@
           :paginator="true"
           :rows="10"
           stripedRows
-          :loading="detailsLoading"
         >
           <Column field="data" header="Data" style="min-width: 100px">
             <template #body="{ data }">
@@ -167,7 +166,6 @@ import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
 
 const loading = ref(false)
-const detailsLoading = ref(false)
 const showDetailsDialog = ref(false)
 const selectedDetails = ref({
   categoria: '',
@@ -218,40 +216,16 @@ const formatDateRange = (inicio, fim) => {
 const showDetails = async (categoria, periodo, valor) => {
   if (valor === 0) return
   
-  // Limpar dados anteriores imediatamente
+  const details = await getDetailsForPeriod(categoria, periodo)
+  
   selectedDetails.value = {
-    categoria: '',
-    periodo: '',
-    total: 0,
-    items: []
+    categoria,
+    periodo: periodo.label,
+    total: valor,
+    items: details
   }
   
-  // Mostrar o dialog com loading
   showDetailsDialog.value = true
-  detailsLoading.value = true
-  
-  try {
-    // Buscar novos dados
-    const details = await getDetailsForPeriod(categoria, periodo)
-    
-    // Atualizar com os novos dados
-    selectedDetails.value = {
-      categoria,
-      periodo: periodo.label,
-      total: valor,
-      items: details
-    }
-  } catch (error) {
-    console.error('Erro ao buscar detalhes:', error)
-    selectedDetails.value = {
-      categoria,
-      periodo: periodo.label,
-      total: valor,
-      items: []
-    }
-  } finally {
-    detailsLoading.value = false
-  }
 }
 
 const updateData = async () => {
