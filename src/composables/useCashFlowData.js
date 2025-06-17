@@ -137,7 +137,8 @@ export function useCashFlowData() {
       contasSelecionadas.value
     )
     
-    const hoje = new Date()
+    console.log('Buscando detalhes para:', { categoria, periodo: periodo.label })
+    console.log('Dados filtrados disponíveis:', filteredData.length)
     
     // Filtrar dados específicos para a categoria e período selecionados
     const detailsData = filteredData.filter(item => {
@@ -149,20 +150,46 @@ export function useCashFlowData() {
       // Verificar se o item pertence ao período específico
       if (periodo.type === 'realizado' && periodo.isCurrentMonth) {
         // Mês atual - realizado: só itens baixados do mês atual
-        return isSameMonth(dataItem, periodo.date) && item.baixado === true
+        const pertence = isSameMonth(dataItem, periodo.date) && item.baixado === true
+        console.log(`Item ${item.pessoa_erp_descricao} - Mês atual realizado:`, pertence, {
+          dataItem: dataItem.toISOString(),
+          periodoDate: periodo.date.toISOString(),
+          baixado: item.baixado
+        })
+        return pertence
       } else if (periodo.type === 'previsto' && periodo.isCurrentMonth) {
         // Mês atual - previsto: só itens não baixados do mês atual
-        return isSameMonth(dataItem, periodo.date) && item.baixado !== true
+        const pertence = isSameMonth(dataItem, periodo.date) && item.baixado !== true
+        console.log(`Item ${item.pessoa_erp_descricao} - Mês atual previsto:`, pertence, {
+          dataItem: dataItem.toISOString(),
+          periodoDate: periodo.date.toISOString(),
+          baixado: item.baixado
+        })
+        return pertence
       } else if (periodo.key.includes('-')) {
         // Período diário
-        return isSameDay(dataItem, periodo.date)
+        const pertence = isSameDay(dataItem, periodo.date)
+        console.log(`Item ${item.pessoa_erp_descricao} - Período diário:`, pertence, {
+          dataItem: dataItem.toISOString(),
+          periodoDate: periodo.date.toISOString()
+        })
+        return pertence
       } else {
-        // Período mensal (não mês atual)
-        return isSameMonth(dataItem, periodo.date)
+        // Período mensal (não mês atual) - CORRIGIDO: incluir todos os itens do mês
+        const pertence = isSameMonth(dataItem, periodo.date)
+        console.log(`Item ${item.pessoa_erp_descricao} - Período mensal:`, pertence, {
+          dataItem: dataItem.toISOString(),
+          periodoDate: periodo.date.toISOString(),
+          baixado: item.baixado,
+          valor: item.valor
+        })
+        return pertence
       }
     })
     
-    return detailsData
+    console.log('Itens encontrados para detalhes:', detailsData.length)
+    
+    const resultado = detailsData
       .map(item => ({
         data: item.data_ymd,
         pessoa: item.pessoa_erp_descricao,
@@ -171,6 +198,10 @@ export function useCashFlowData() {
         observacoes: item.observacoes || ''
       }))
       .sort((a, b) => new Date(a.data) - new Date(b.data))
+    
+    console.log('Resultado final dos detalhes:', resultado)
+    
+    return resultado
   }
   
   return {

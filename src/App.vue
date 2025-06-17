@@ -7,8 +7,8 @@
         <!-- Página Inicial -->
         <div v-if="currentView === 'home'" class="home-page">
           <div class="welcome-section">
-            <h2 class="welcome-title">Bem-vindo ao Sistema Financeiro</h2>
-            <p class="welcome-subtitle">Escolha uma das opções abaixo para começar</p>
+            <h2 class="welcome-title">Sistema Financeiro</h2>
+            <p class="welcome-subtitle">Escolha uma opção para começar</p>
           </div>
           
           <div class="navigation-cards">
@@ -18,7 +18,7 @@
               </div>
               <div class="nav-card-content">
                 <h3>Fluxo de Caixa</h3>
-                <p>Visualize entradas e saídas por período</p>
+                <p>Entradas e saídas por período</p>
               </div>
               <div class="nav-card-arrow">
                 <i class="pi pi-arrow-right"></i>
@@ -31,7 +31,7 @@
               </div>
               <div class="nav-card-content">
                 <h3>Atrasados</h3>
-                <p>Contas em atraso organizadas por categoria</p>
+                <p>Contas em atraso por categoria</p>
               </div>
               <div class="nav-card-arrow">
                 <i class="pi pi-arrow-right"></i>
@@ -113,7 +113,7 @@ const goHome = () => {
 }
 
 .main-content {
-  padding: 2rem 0;
+  padding: 1.5rem 0;
 }
 
 .container {
@@ -122,64 +122,64 @@ const goHome = () => {
   padding: 0 1rem;
 }
 
-/* Página Inicial */
+/* Página Inicial - Mais Compacta */
 .home-page {
-  max-width: 900px;
+  max-width: 800px;
   margin: 0 auto;
-  padding: 3rem 0;
+  padding: 2rem 0;
 }
 
 .welcome-section {
   text-align: center;
-  margin-bottom: 4rem;
+  margin-bottom: 2.5rem;
 }
 
 .welcome-title {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #1a365d;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .welcome-subtitle {
-  font-size: 1.2rem;
+  font-size: 1rem;
   color: #4a5568;
   margin: 0;
 }
 
 .navigation-cards {
   display: grid;
-  gap: 2rem;
+  gap: 1.5rem;
   grid-template-columns: 1fr;
 }
 
 .nav-card {
   background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 4px 20px rgba(26, 54, 93, 0.08);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(26, 54, 93, 0.08);
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem;
   cursor: pointer;
   transition: all 0.3s ease;
   border: 2px solid transparent;
 }
 
 .nav-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(26, 54, 93, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(26, 54, 93, 0.15);
   border-color: #2b6cb0;
 }
 
 .nav-card-icon {
-  width: 80px;
-  height: 80px;
-  border-radius: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
+  font-size: 1.5rem;
   color: white;
   background: linear-gradient(135deg, #2b6cb0, #1a365d);
   flex-shrink: 0;
@@ -190,26 +190,26 @@ const goHome = () => {
 }
 
 .nav-card-content h3 {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: #1a365d;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
 }
 
 .nav-card-content p {
   color: #4a5568;
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 .nav-card-arrow {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #2b6cb0;
   transition: transform 0.3s ease;
 }
 
 .nav-card:hover .nav-card-arrow {
-  transform: translateX(8px);
+  transform: translateX(6px);
 }
 
 /* Conteúdo das Views */
@@ -221,7 +221,7 @@ const goHome = () => {
   display: flex;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .home-btn {
@@ -235,14 +235,14 @@ const goHome = () => {
 }
 
 .current-view-title {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #1a365d;
   margin: 0;
 }
 
 .view-content {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 @keyframes fadeIn {
@@ -258,22 +258,22 @@ const goHome = () => {
 
 @media (max-width: 768px) {
   .welcome-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
   
   .nav-card {
-    padding: 1.5rem;
-    gap: 1.5rem;
+    padding: 1.25rem;
+    gap: 1.25rem;
   }
   
   .nav-card-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
   }
   
   .nav-card-content h3 {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
   
   .view-header {
