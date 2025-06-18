@@ -37,14 +37,14 @@ export function useCashFlowData() {
           // Mês atual: duas colunas (realizado e previsto)
           periodos.push({
             key: `${mesKey}-realizado`,
-            label: `${format(mes, 'MMM/yy', { locale: ptBR })} (Real.)`,
+            label: `${format(mes, 'dd/MM', { locale: ptBR })} Realizado`,
             type: 'realizado',
             date: mes,
             isCurrentMonth: true
           })
           periodos.push({
             key: `${mesKey}-previsto`,
-            label: `${format(mes, 'MMM/yy', { locale: ptBR })} (Prev.)`,
+            label: `${format(mes, 'dd/MM', { locale: ptBR })} Previsto`,
             type: 'previsto',
             date: mes,
             isCurrentMonth: true
@@ -54,7 +54,7 @@ export function useCashFlowData() {
           const isPast = isBefore(mes, hoje)
           periodos.push({
             key: mesKey,
-            label: format(mes, 'MMM/yy', { locale: ptBR }),
+            label: format(mes, 'dd/MM', { locale: ptBR }),
             type: isPast ? 'realizado' : 'previsto',
             date: mes,
             isCurrentMonth: false
@@ -138,7 +138,6 @@ export function useCashFlowData() {
     )
     
     console.log('Buscando detalhes para:', { categoria, periodo: periodo.label })
-    console.log('Dados filtrados disponíveis:', filteredData.length)
     
     // Filtrar dados específicos para a categoria e período selecionados
     const detailsData = filteredData.filter(item => {
@@ -149,51 +148,29 @@ export function useCashFlowData() {
       
       // Verificar se o item pertence ao período específico
       if (periodo.type === 'realizado' && periodo.isCurrentMonth) {
-        // Mês atual - realizado: só itens baixados do mês atual
-        const pertence = isSameMonth(dataItem, periodo.date) && item.baixado === true
-        console.log(`Item ${item.pessoa_erp_descricao} - Mês atual realizado:`, pertence, {
-          dataItem: dataItem.toISOString(),
-          periodoDate: periodo.date.toISOString(),
-          baixado: item.baixado
-        })
-        return pertence
+        return isSameMonth(dataItem, periodo.date) && item.baixado === true
       } else if (periodo.type === 'previsto' && periodo.isCurrentMonth) {
-        // Mês atual - previsto: só itens não baixados do mês atual
-        const pertence = isSameMonth(dataItem, periodo.date) && item.baixado !== true
-        console.log(`Item ${item.pessoa_erp_descricao} - Mês atual previsto:`, pertence, {
-          dataItem: dataItem.toISOString(),
-          periodoDate: periodo.date.toISOString(),
-          baixado: item.baixado
-        })
-        return pertence
+        return isSameMonth(dataItem, periodo.date) && item.baixado !== true
       } else if (periodo.key.includes('-')) {
-        // Período diário
-        const pertence = isSameDay(dataItem, periodo.date)
-        console.log(`Item ${item.pessoa_erp_descricao} - Período diário:`, pertence, {
-          dataItem: dataItem.toISOString(),
-          periodoDate: periodo.date.toISOString()
-        })
-        return pertence
+        return isSameDay(dataItem, periodo.date)
       } else {
-        // Período mensal (não mês atual) - CORRIGIDO: incluir todos os itens do mês
-        const pertence = isSameMonth(dataItem, periodo.date)
-        console.log(`Item ${item.pessoa_erp_descricao} - Período mensal:`, pertence, {
-          dataItem: dataItem.toISOString(),
-          periodoDate: periodo.date.toISOString(),
-          baixado: item.baixado,
-          valor: item.valor
-        })
-        return pertence
+        return isSameMonth(dataItem, periodo.date)
       }
     })
     
     console.log('Itens encontrados para detalhes:', detailsData.length)
     
     const resultado = detailsData
-      .map(item => ({
+      .map((item, index) => ({
+        titulo: `Serviços Prestados - Item ${index + 1}`,
+        documento: `RPS ${2000 + index}`,
         data: item.data_ymd,
+        emissao: item.data_ymd,
+        previsao: item.baixado ? null : item.data_ymd,
         pessoa: item.pessoa_erp_descricao,
         valor: item.valor,
+        valorBruto: item.valor,
+        totalAberto: item.baixado ? 0 : item.valor,
         status: item.baixado ? 'Realizado' : 'Previsto',
         observacoes: item.observacoes || ''
       }))
