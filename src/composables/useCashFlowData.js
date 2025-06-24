@@ -137,7 +137,7 @@ export function useCashFlowData() {
       contasSelecionadas.value
     )
     
-    console.log('Buscando detalhes para:', { categoria, periodo: periodo.label })
+    console.log('Buscando detalhes para:', { categoria, periodo: periodo.label, type: periodo.type })
     
     // Filtrar dados específicos para a categoria e período selecionados
     const detailsData = filteredData.filter(item => {
@@ -147,34 +147,67 @@ export function useCashFlowData() {
       const dataItem = new Date(item.data_ymd)
       
       // Verificar se o item pertence ao período específico
-      if (periodo.type === 'realizado' && periodo.isCurrentMonth) {
-        return isSameMonth(dataItem, periodo.date) && item.baixado === true
-      } else if (periodo.type === 'previsto' && periodo.isCurrentMonth) {
-        return isSameMonth(dataItem, periodo.date) && item.baixado !== true
-      } else if (periodo.key.includes('-')) {
-        return isSameDay(dataItem, periodo.date)
+      if (periodo.isCurrentMonth) {
+        // Mês atual com separação realizado/previsto
+        if (periodo.type === 'realizado') {
+          return isSameMonth(dataItem, periodo.date) && item.baixado === true
+        } else if (periodo.type === 'previsto') {
+          return isSameMonth(dataItem, periodo.date) && item.baixado !== true
+        }
       } else {
-        return isSameMonth(dataItem, periodo.date)
+        // Outros períodos
+        if (periodo.key.includes('-')) {
+          // Período diário
+          return isSameDay(dataItem, periodo.date)
+        } else {
+          // Período mensal
+          return isSameMonth(dataItem, periodo.date)
+        }
       }
+      
+      return false
     })
     
     console.log('Itens encontrados para detalhes:', detailsData.length)
     
     const resultado = detailsData
-      .map((item, index) => ({
-        titulo: `Serviços Prestados - Item ${index + 1}`,
-        documento: `RPS ${2000 + index}`,
-        data: item.data_ymd,
-        emissao: item.data_ymd,
-        previsao: item.baixado ? null : item.data_ymd,
-        pessoa: item.pessoa_erp_descricao,
-        valor: item.valor,
-        valorBruto: item.valor,
-        totalAberto: item.baixado ? 0 : item.valor,
-        status: item.baixado ? 'Realizado' : 'Previsto',
-        observacoes: item.observacoes || ''
-      }))
-      .sort((a, b) => new Date(a.data) - new Date(b.data))
+      .map((item, index) => {
+        // Determinar se é realizado ou previsto baseado na data e status
+        const dataItem = new Date(item.data_ymd)
+        const hoje = new Date()
+        const isRealizado = item.baixado === true
+        const isPastDue = dataItem < hoje
+        
+        let status = 'Previsto'
+        if (isRealizado) {
+          status = 'Realizado'
+        } else if (isPastDue) {
+          status = 'Vencido'
+        }
+        
+        return {
+          titulo: `Serviços Prestados - ${item.categoria_erp_descricao}`,
+          documento: `RPS ${String(2000 + index).padStart(4, '0')}`,
+          data: item.data_ymd,
+          emissao: item.data_ymd,
+          previsao: isRealizado ? null : item.data_ymd,
+          pessoa: item.pessoa_erp_descricao,
+          valor: item.valor,
+          valorBruto: item.valor,
+          totalAberto: isRealizado ? 0 : item.valor,
+          status: status,
+          observacoes: item.observacoes || '',
+          baixado: item.baixado
+        }
+      })
+      .sort((a, b) => {
+        // Ordenar por status (Realizado primeiro) e depois por data
+        if (a.status !== b.status) {
+          if (a.status === 'Realizado') return -1
+          if (b.status === 'Realizado') return 1
+        }
+        return new Date(a.data) - new Date(b.data)
+      })
     
     console.log('Resultado final dos detalhes:', resultado)
     

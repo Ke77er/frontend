@@ -110,16 +110,24 @@
       v-model:visible="showDetailsDialog" 
       :header="detailsTitle"
       :modal="true"
-      :style="{ width: '900px' }"
+      :style="{ width: '1200px' }"
       class="details-dialog"
     >
       <div class="details-content">
         <div class="details-header">
-          <div class="details-title">{{ selectedDetails.categoria }}</div>
-          <div class="details-period">{{ selectedDetails.periodo }}</div>
-          <div class="details-total">
-            <span class="total-label">Total:</span>
-            <ValueDisplay :value="selectedDetails.total" type="currency" emphasis :class="getValueClass(selectedDetails.total)" />
+          <div class="details-info">
+            <div class="details-title">{{ selectedDetails.categoria }}</div>
+            <div class="details-period">{{ selectedDetails.periodo }}</div>
+          </div>
+          <div class="details-summary">
+            <div class="summary-item">
+              <span class="summary-label">Total Geral:</span>
+              <ValueDisplay :value="selectedDetails.total" type="currency" emphasis :class="getValueClass(selectedDetails.total)" />
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Itens:</span>
+              <span class="summary-count">{{ selectedDetails.items.length }}</span>
+            </div>
           </div>
         </div>
 
@@ -132,14 +140,14 @@
           showGridlines
           size="small"
         >
-          <Column field="titulo" header="Título" style="min-width: 120px">
+          <Column field="titulo" header="Título" style="min-width: 200px">
             <template #body="{ data }">
-              <span class="detail-titulo">{{ data.titulo || 'RPS ' + (data.documento || '') }}</span>
+              <span class="detail-titulo">{{ data.titulo }}</span>
             </template>
           </Column>
           <Column field="documento" header="Documento" style="min-width: 100px">
             <template #body="{ data }">
-              <span class="detail-documento">{{ data.documento || '-' }}</span>
+              <span class="detail-documento">{{ data.documento }}</span>
             </template>
           </Column>
           <Column field="pessoa" header="Cliente / Fornecedor" style="min-width: 200px">
@@ -147,7 +155,7 @@
               <span class="detail-pessoa">{{ data.pessoa }}</span>
             </template>
           </Column>
-          <Column field="data" header="Emissão" style="min-width: 90px">
+          <Column field="emissao" header="Emissão" style="min-width: 90px">
             <template #body="{ data }">
               <DateDisplay :date="data.emissao" />
             </template>
@@ -176,7 +184,7 @@
             <template #body="{ data }">
               <Tag 
                 :value="data.status" 
-                :severity="data.status === 'Realizado' ? 'success' : 'warning'"
+                :severity="getStatusSeverity(data.status)"
                 class="status-tag"
               />
             </template>
@@ -256,6 +264,15 @@ const getValueClass = (value) => {
   return 'neutral-value'
 }
 
+const getStatusSeverity = (status) => {
+  switch (status) {
+    case 'Realizado': return 'success'
+    case 'Vencido': return 'danger'
+    case 'Previsto': return 'warning'
+    default: return 'info'
+  }
+}
+
 const getPeriodColumnClass = (periodo) => {
   const classes = ['period-column']
   if (periodo.type === 'realizado') classes.push('realizado-column')
@@ -266,6 +283,8 @@ const getPeriodColumnClass = (periodo) => {
 
 const showDetails = async (categoria, periodo, valor) => {
   if (valor === 0) return
+  
+  console.log('Clicou para ver detalhes:', { categoria, periodo: periodo.label, valor })
   
   const details = await getDetailsForPeriod(categoria, periodo)
   
@@ -544,37 +563,57 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
 
 .details-header {
   background: #f8f9fa;
-  padding: 1rem;
+  padding: 1.5rem;
   border-bottom: 2px solid #dee2e6;
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 1rem;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  gap: 1rem;
+}
+
+.details-info {
+  flex: 1;
 }
 
 .details-title {
   font-weight: 600;
   color: #495057;
-  font-size: 0.9rem;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
 }
 
 .details-period {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: #6c757d;
   background: #e9ecef;
-  padding: 0.25rem 0.5rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 4px;
+  display: inline-block;
 }
 
-.details-total {
+.details-summary {
   display: flex;
+  gap: 2rem;
   align-items: center;
-  gap: 0.5rem;
 }
 
-.total-label {
-  font-size: 0.8rem;
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.summary-label {
+  font-size: 0.75rem;
   color: #6c757d;
+  font-weight: 500;
+}
+
+.summary-count {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #495057;
 }
 
 .details-table {
@@ -586,12 +625,12 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
   color: #495057;
   font-weight: 600;
   border: 1px solid #dee2e6;
-  padding: 0.5rem;
+  padding: 0.75rem;
   font-size: 0.75rem;
 }
 
 .details-table :deep(.p-datatable-tbody > tr > td) {
-  padding: 0.5rem;
+  padding: 0.75rem;
   border: 1px solid #dee2e6;
   font-size: 0.75rem;
 }
@@ -618,8 +657,14 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
   }
   
   .details-header {
-    grid-template-columns: 1fr;
-    text-align: center;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .details-summary {
+    align-self: stretch;
+    justify-content: space-around;
   }
   
   .cash-flow-table :deep(.p-datatable-thead > tr > th),
