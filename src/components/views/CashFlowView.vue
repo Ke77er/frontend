@@ -1,108 +1,129 @@
 <template>
   <div class="cash-flow-view">
-    <!-- Resumo Compacto -->
-    <div class="summary-section">
-      <div class="summary-cards">
-        <div class="summary-card success">
-          <div class="card-icon">
-            <i class="pi pi-check-circle"></i>
-          </div>
-          <div class="card-content">
-            <div class="card-label">Realizado</div>
-            <div class="card-value">
-              <ValueDisplay :value="totals.realizado" type="currency" emphasis />
-            </div>
+    <!-- Seção de Valores no Topo -->
+    <div class="top-values-section">
+      <div class="values-grid">
+        <div class="value-card realizado">
+          <div class="value-label">Total Realizado</div>
+          <div class="value-amount">
+            <ValueDisplay :value="totals.realizado" type="currency" emphasis />
           </div>
         </div>
         
-        <div class="summary-card warning">
-          <div class="card-icon">
-            <i class="pi pi-clock"></i>
-          </div>
-          <div class="card-content">
-            <div class="card-label">Previsto</div>
-            <div class="card-value">
-              <ValueDisplay :value="totals.previsto" type="currency" emphasis />
-            </div>
+        <div class="value-card previsto">
+          <div class="value-label">Total Previsto</div>
+          <div class="value-amount">
+            <ValueDisplay :value="totals.previsto" type="currency" emphasis />
           </div>
         </div>
         
-        <div class="summary-card" :class="totals.saldo >= 0 ? 'success' : 'danger'">
-          <div class="card-icon">
-            <i class="pi pi-wallet"></i>
-          </div>
-          <div class="card-content">
-            <div class="card-label">Saldo Total</div>
-            <div class="card-value">
-              <ValueDisplay :value="totals.saldo" type="currency" emphasis />
-            </div>
+        <div class="value-card saldo" :class="totals.saldo >= 0 ? 'positive' : 'negative'">
+          <div class="value-label">Saldo Final</div>
+          <div class="value-amount">
+            <ValueDisplay :value="totals.saldo" type="currency" emphasis />
           </div>
         </div>
-      </div>
-      
-      <div class="period-info">
-        <i class="pi pi-calendar"></i>
-        <span>{{ formatDateRange(dataInicio, dataFim) }}</span>
+        
+        <div class="value-card periodo">
+          <div class="value-label">Período</div>
+          <div class="value-period">
+            <i class="pi pi-calendar"></i>
+            {{ formatDateRange(dataInicio, dataFim) }}
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Tabela de Fluxo -->
-    <div class="table-container">
+    <!-- Histórico de Períodos -->
+    <div class="period-history">
+      <div class="history-header">
+        <h4>Histórico por Período</h4>
+      </div>
+      <div class="period-cards">
+        <div 
+          v-for="periodo in periodos.slice(0, 6)" 
+          :key="periodo.key"
+          class="period-card"
+          :class="getPeriodCardClass(periodo)"
+        >
+          <div class="period-date">{{ periodo.shortLabel || periodo.label }}</div>
+          <div class="period-type">{{ periodo.typeLabel }}</div>
+          <div class="period-total">
+            <ValueDisplay 
+              :value="getPeriodTotal(periodo)" 
+              type="currency" 
+              :class="getValueClass(getPeriodTotal(periodo))"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela Principal -->
+    <div class="main-table-section">
       <div class="table-header">
-        <h3 class="table-title">FLUXO DE CAIXA - {{ formatPeriodTitle(dataInicio, dataFim) }}</h3>
+        <h3>FLUXO DE CAIXA - {{ formatPeriodTitle(dataInicio, dataFim) }}</h3>
       </div>
       
-      <DataTable
-        :value="linhas"
-        class="cash-flow-table"
-        :paginator="false"
-        responsiveLayout="scroll"
-        showGridlines
-        :loading="loading"
-        :scrollable="true"
-        scrollHeight="600px"
-        size="small"
-      >
-        <Column field="categoria" header="Categoria" :frozen="true" style="min-width: 280px; background: #f8f9fa;">
-          <template #body="{ data }">
-            <div class="category-cell">
-              <span class="category-name">{{ data.categoria }}</span>
-              <div class="category-total">
-                <ValueDisplay :value="data.total" type="currency" :class="getValueClass(data.total)" />
-              </div>
-            </div>
-          </template>
-        </Column>
-        
-        <Column 
-          v-for="periodo in periodos" 
-          :key="periodo.key"
-          :field="periodo.key"
-          :header="periodo.label"
-          style="min-width: 100px; text-align: center;"
-          :class="getPeriodColumnClass(periodo)"
-        >
-          <template #header>
-            <div class="period-header">
-              <div class="period-date">{{ periodo.shortLabel || periodo.label }}</div>
-              <div class="period-type">{{ periodo.typeLabel }}</div>
-            </div>
-          </template>
-          <template #body="{ data }">
+      <div class="table-wrapper">
+        <!-- Tarjas Coloridas -->
+        <div class="column-bands">
+          <div class="band-container">
+            <div class="category-band"></div>
             <div 
-              class="value-cell" 
-              @click="showDetails(data.categoria, periodo, data[periodo.key])"
-              :class="{ 'clickable-value': data[periodo.key] !== 0 }"
+              v-for="periodo in periodos" 
+              :key="periodo.key"
+              class="period-band"
+              :class="getBandClass(periodo)"
             >
-              <ValueDisplay 
-                :value="data[periodo.key] || 0" 
-                type="currency" 
-                :class="getValueClass(data[periodo.key] || 0)"
-              />
+              <span class="band-label">{{ getBandLabel(periodo) }}</span>
             </div>
-          </template>
-        </Column>
-      </DataTable>
+          </div>
+        </div>
+
+        <DataTable
+          :value="linhas"
+          class="compact-cash-flow-table"
+          :paginator="false"
+          responsiveLayout="scroll"
+          showGridlines
+          :loading="loading"
+          :scrollable="true"
+          scrollHeight="500px"
+          size="small"
+        >
+          <Column field="categoria" header="Categoria" :frozen="true" style="min-width: 200px;">
+            <template #body="{ data }">
+              <div class="category-cell">
+                <span class="category-name">{{ data.categoria }}</span>
+              </div>
+            </template>
+          </Column>
+          
+          <Column 
+            v-for="periodo in periodos" 
+            :key="periodo.key"
+            :field="periodo.key"
+            :header="periodo.label"
+            style="min-width: 80px; text-align: center;"
+            :class="getPeriodColumnClass(periodo)"
+          >
+            <template #body="{ data }">
+              <div 
+                class="value-cell" 
+                @click="showDetails(data.categoria, periodo, data[periodo.key])"
+                :class="{ 'clickable-value': data[periodo.key] !== 0 }"
+              >
+                <ValueDisplay 
+                  :value="data[periodo.key] || 0" 
+                  type="currency" 
+                  :class="getValueClass(data[periodo.key] || 0)"
+                />
+              </div>
+            </template>
+          </Column>
+        </DataTable>
+      </div>
     </div>
 
     <!-- Dialog de Detalhes -->
@@ -110,22 +131,24 @@
       v-model:visible="showDetailsDialog" 
       :header="detailsTitle"
       :modal="true"
-      :style="{ width: '900px' }"
+      :style="{ width: '95vw', maxWidth: '1200px' }"
       class="details-dialog"
     >
       <div class="details-content">
-        <div class="details-header">
-          <div class="details-title">{{ selectedDetails.categoria }}</div>
-          <div class="details-period">{{ selectedDetails.periodo }}</div>
-          <div class="details-total">
+        <div class="details-summary">
+          <div class="summary-info">
+            <span class="summary-category">{{ selectedDetails.categoria }}</span>
+            <span class="summary-period">{{ selectedDetails.periodo }}</span>
+          </div>
+          <div class="summary-total">
             <span class="total-label">Total:</span>
-            <ValueDisplay :value="selectedDetails.total" type="currency" emphasis :class="getValueClass(selectedDetails.total)" />
+            <ValueDisplay :value="selectedDetails.total" type="currency" emphasis />
           </div>
         </div>
 
         <DataTable 
           :value="selectedDetails.items" 
-          class="details-table"
+          class="compact-details-table"
           :paginator="true"
           :rows="15"
           stripedRows
@@ -134,45 +157,45 @@
         >
           <Column field="titulo" header="Título" style="min-width: 120px">
             <template #body="{ data }">
-              <span class="detail-titulo">{{ data.titulo || 'RPS ' + (data.documento || '') }}</span>
+              <span class="detail-titulo">{{ data.titulo }}</span>
             </template>
           </Column>
-          <Column field="documento" header="Documento" style="min-width: 100px">
+          <Column field="documento" header="Documento" style="min-width: 80px">
             <template #body="{ data }">
-              <span class="detail-documento">{{ data.documento || '-' }}</span>
+              <span class="detail-documento">{{ data.documento }}</span>
             </template>
           </Column>
-          <Column field="pessoa" header="Cliente / Fornecedor" style="min-width: 200px">
+          <Column field="pessoa" header="Cliente/Fornecedor" style="min-width: 150px">
             <template #body="{ data }">
               <span class="detail-pessoa">{{ data.pessoa }}</span>
             </template>
           </Column>
-          <Column field="data" header="Emissão" style="min-width: 90px">
+          <Column field="emissao" header="Emissão" style="min-width: 80px">
             <template #body="{ data }">
               <DateDisplay :date="data.emissao" />
             </template>
           </Column>
-          <Column field="data" header="Vencimento" style="min-width: 90px">
+          <Column field="data" header="Vencimento" style="min-width: 80px">
             <template #body="{ data }">
               <DateDisplay :date="data.data" />
             </template>
           </Column>
-          <Column field="previsao" header="Previsão" style="min-width: 90px">
+          <Column field="previsao" header="Previsão" style="min-width: 80px">
             <template #body="{ data }">
               <DateDisplay :date="data.previsao" allowEmpty />
             </template>
           </Column>
-          <Column field="valor" header="Valor Bruto" style="min-width: 110px">
+          <Column field="valorBruto" header="Valor Bruto" style="min-width: 90px">
             <template #body="{ data }">
-              <ValueDisplay :value="data.valorBruto || data.valor" type="currency" :class="getValueClass(data.valorBruto || data.valor)" />
+              <ValueDisplay :value="data.valorBruto" type="currency" />
             </template>
           </Column>
-          <Column field="totalAberto" header="Total em Aberto" style="min-width: 120px">
+          <Column field="totalAberto" header="Total em Aberto" style="min-width: 100px">
             <template #body="{ data }">
-              <ValueDisplay :value="data.totalAberto || data.valor" type="currency" :class="getValueClass(data.totalAberto || data.valor)" />
+              <ValueDisplay :value="data.totalAberto" type="currency" />
             </template>
           </Column>
-          <Column field="status" header="Status" style="min-width: 100px">
+          <Column field="status" header="Status" style="min-width: 80px">
             <template #body="{ data }">
               <Tag 
                 :value="data.status" 
@@ -212,7 +235,7 @@ const linhas = ref([])
 const periodos = ref([])
 
 const detailsTitle = computed(() => 
-  `${selectedDetails.value.categoria} - ${selectedDetails.value.periodo}`
+  `Detalhes - ${selectedDetails.value.categoria}`
 )
 
 const totals = computed(() => {
@@ -238,8 +261,8 @@ const totals = computed(() => {
 const formatDateRange = (inicio, fim) => {
   if (!inicio || !fim) return ''
   
-  const formatInicio = format(inicio, 'dd/MM/yyyy', { locale: ptBR })
-  const formatFim = format(fim, 'dd/MM/yyyy', { locale: ptBR })
+  const formatInicio = format(inicio, 'dd/MM/yy', { locale: ptBR })
+  const formatFim = format(fim, 'dd/MM/yy', { locale: ptBR })
   
   return `${formatInicio} - ${formatFim}`
 }
@@ -262,6 +285,30 @@ const getPeriodColumnClass = (periodo) => {
   if (periodo.type === 'previsto') classes.push('previsto-column')
   if (periodo.isCurrentMonth) classes.push('current-month-column')
   return classes.join(' ')
+}
+
+const getPeriodCardClass = (periodo) => {
+  const classes = ['period-card']
+  if (periodo.type === 'realizado') classes.push('realizado-card')
+  if (periodo.type === 'previsto') classes.push('previsto-card')
+  if (periodo.isCurrentMonth) classes.push('current-card')
+  return classes.join(' ')
+}
+
+const getBandClass = (periodo) => {
+  if (periodo.isCurrentMonth) return 'current-band'
+  if (periodo.type === 'realizado') return 'realizado-band'
+  return 'previsto-band'
+}
+
+const getBandLabel = (periodo) => {
+  if (periodo.isCurrentMonth) return 'ATUAL'
+  if (periodo.type === 'realizado') return 'REALIZADO'
+  return 'PREVISTO'
+}
+
+const getPeriodTotal = (periodo) => {
+  return linhas.value.reduce((sum, item) => sum + (item[periodo.key] || 0), 0)
 }
 
 const showDetails = async (categoria, periodo, valor) => {
@@ -287,10 +334,9 @@ const updateData = async () => {
     const result = await generateCashFlowData(dataInicio.value, dataFim.value)
     linhas.value = result.linhas
     
-    // Adicionar labels curtos e tipos para os períodos
     periodos.value = result.periodos.map(p => ({
       ...p,
-      shortLabel: p.label.length > 8 ? p.label.substring(0, 8) : p.label,
+      shortLabel: p.label.length > 6 ? p.label.substring(0, 6) : p.label,
       typeLabel: p.type === 'realizado' ? 'Realizado' : 'Previsto'
     }))
   } finally {
@@ -304,100 +350,147 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
 <style scoped>
 .cash-flow-view {
   padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.summary-section {
-  margin-bottom: 1.5rem;
-}
-
-.summary-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.summary-card {
+/* Seção de Valores no Topo */
+.top-values-section {
   background: white;
   border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.value-card {
   padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  border-radius: 6px;
   border-left: 4px solid;
+  background: #f8f9fa;
 }
 
-.summary-card.success {
+.value-card.realizado {
   border-left-color: #28a745;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
 }
 
-.summary-card.warning {
-  border-left-color: #ffc107;
+.value-card.previsto {
+  border-left-color: #007bff;
+  background: linear-gradient(135deg, #cce5ff 0%, #b3d9ff 100%);
 }
 
-.summary-card.danger {
+.value-card.saldo.positive {
+  border-left-color: #28a745;
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+}
+
+.value-card.saldo.negative {
   border-left-color: #dc3545;
+  background: linear-gradient(135deg, #f8d7da 0%, #f1b0b7 100%);
 }
 
-.card-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  color: white;
+.value-card.periodo {
+  border-left-color: #6c757d;
+  background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
 }
 
-.summary-card.success .card-icon {
-  background: #28a745;
-}
-
-.summary-card.warning .card-icon {
-  background: #ffc107;
-}
-
-.summary-card.danger .card-icon {
-  background: #dc3545;
-}
-
-.card-content {
-  flex: 1;
-}
-
-.card-label {
-  font-size: 0.75rem;
+.value-label {
+  font-size: 0.8rem;
   color: #6c757d;
-  margin-bottom: 0.25rem;
-  font-weight: 500;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
 }
 
-.card-value {
-  font-size: 1rem;
+.value-amount {
+  font-size: 1.25rem;
   font-weight: 700;
+  color: #1a365d;
 }
 
-.period-info {
+.value-period {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #495057;
-  font-size: 0.875rem;
-  font-weight: 500;
-  background: #f8f9fa;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1px solid #dee2e6;
 }
 
-.table-container {
+/* Histórico de Períodos */
+.period-history {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.history-header h4 {
+  margin: 0 0 1rem 0;
+  color: #1a365d;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.period-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+}
+
+.period-card {
+  padding: 0.75rem;
+  border-radius: 6px;
+  text-align: center;
+  border: 2px solid;
+  background: white;
+}
+
+.period-card.realizado-card {
+  border-color: #28a745;
+  background: linear-gradient(135deg, #f8fff9 0%, #d4edda 100%);
+}
+
+.period-card.previsto-card {
+  border-color: #007bff;
+  background: linear-gradient(135deg, #f8fcff 0%, #cce5ff 100%);
+}
+
+.period-card.current-card {
+  border-color: #ffc107;
+  background: linear-gradient(135deg, #fffdf5 0%, #fff3cd 100%);
+}
+
+.period-date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #495057;
+}
+
+.period-type {
+  font-size: 0.65rem;
+  color: #6c757d;
+  margin: 0.25rem 0;
+}
+
+.period-total {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+/* Tabela Principal */
+.main-table-section {
   background: white;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .table-header {
@@ -409,95 +502,99 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
 
 .table-title {
   margin: 0;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-.cash-flow-table :deep(.p-datatable-thead > tr > th) {
+.table-wrapper {
+  position: relative;
+}
+
+/* Tarjas Coloridas */
+.column-bands {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.band-container {
+  display: flex;
+  height: 25px;
+}
+
+.category-band {
+  min-width: 200px;
+  background: #f8f9fa;
+  border-right: 1px solid #dee2e6;
+}
+
+.period-band {
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #dee2e6;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.period-band.realizado-band {
+  background: #28a745;
+}
+
+.period-band.previsto-band {
+  background: #007bff;
+}
+
+.period-band.current-band {
+  background: #ffc107;
+  color: #212529;
+}
+
+/* Tabela Compacta */
+.compact-cash-flow-table :deep(.p-datatable-thead > tr > th) {
   background: #e9ecef;
   color: #495057;
   font-weight: 600;
   border: 1px solid #dee2e6;
-  padding: 0.5rem;
-  font-size: 0.75rem;
+  padding: 0.4rem;
+  font-size: 0.7rem;
   text-align: center;
   vertical-align: middle;
 }
 
-.cash-flow-table :deep(.realizado-column th) {
-  background: #d4edda;
-  color: #155724;
-}
-
-.cash-flow-table :deep(.previsto-column th) {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.cash-flow-table :deep(.current-month-column th) {
-  background: #cce5ff;
-  color: #004085;
-  font-weight: 700;
-}
-
-.cash-flow-table :deep(.p-datatable-tbody > tr > td) {
-  padding: 0.4rem;
+.compact-cash-flow-table :deep(.p-datatable-tbody > tr > td) {
+  padding: 0.3rem;
   border: 1px solid #dee2e6;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   vertical-align: middle;
 }
 
-.cash-flow-table :deep(.p-datatable-tbody > tr:nth-child(even)) {
+.compact-cash-flow-table :deep(.p-datatable-tbody > tr:nth-child(even)) {
   background: #f8f9fa;
 }
 
-.cash-flow-table :deep(.p-datatable-tbody > tr:hover) {
+.compact-cash-flow-table :deep(.p-datatable-tbody > tr:hover) {
   background: #e3f2fd;
 }
 
-.period-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.125rem;
-}
-
-.period-date {
-  font-weight: 600;
-  font-size: 0.7rem;
-}
-
-.period-type {
-  font-size: 0.6rem;
-  opacity: 0.8;
-  font-weight: 400;
-}
-
 .category-cell {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.category-name {
   font-weight: 500;
   color: #495057;
-  font-size: 0.75rem;
-  flex: 1;
-}
-
-.category-total {
-  font-weight: 600;
   font-size: 0.7rem;
 }
 
 .value-cell {
   text-align: center;
   cursor: default;
-  padding: 0.25rem;
+  padding: 0.2rem;
   border-radius: 3px;
   transition: all 0.2s ease;
 }
@@ -526,6 +623,7 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
   color: #6c757d !important;
 }
 
+/* Dialog de Detalhes */
 .details-dialog :deep(.p-dialog-header) {
   background: #4a90e2;
   color: white;
@@ -533,40 +631,37 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
   padding: 1rem;
 }
 
-.details-dialog :deep(.p-dialog-title) {
-  font-size: 1rem;
-  font-weight: 600;
-}
-
 .details-content {
   padding: 0;
 }
 
-.details-header {
+.details-summary {
   background: #f8f9fa;
   padding: 1rem;
   border-bottom: 2px solid #dee2e6;
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 1rem;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 }
 
-.details-title {
+.summary-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-category {
   font-weight: 600;
   color: #495057;
   font-size: 0.9rem;
 }
 
-.details-period {
+.summary-period {
   font-size: 0.8rem;
   color: #6c757d;
-  background: #e9ecef;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
 }
 
-.details-total {
+.summary-total {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -577,55 +672,52 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
   color: #6c757d;
 }
 
-.details-table {
-  border: none;
-}
-
-.details-table :deep(.p-datatable-thead > tr > th) {
+.compact-details-table :deep(.p-datatable-thead > tr > th) {
   background: #e9ecef;
   color: #495057;
   font-weight: 600;
   border: 1px solid #dee2e6;
   padding: 0.5rem;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
 }
 
-.details-table :deep(.p-datatable-tbody > tr > td) {
-  padding: 0.5rem;
+.compact-details-table :deep(.p-datatable-tbody > tr > td) {
+  padding: 0.4rem;
   border: 1px solid #dee2e6;
-  font-size: 0.75rem;
-}
-
-.details-table :deep(.p-datatable-tbody > tr:nth-child(even)) {
-  background: #f8f9fa;
+  font-size: 0.7rem;
 }
 
 .detail-titulo,
 .detail-documento,
 .detail-pessoa {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #495057;
 }
 
 .status-tag {
-  font-size: 0.65rem;
-  padding: 0.25rem 0.5rem;
+  font-size: 0.6rem;
+  padding: 0.2rem 0.4rem;
 }
 
 @media (max-width: 768px) {
-  .summary-cards {
+  .values-grid {
     grid-template-columns: 1fr;
   }
   
-  .details-header {
-    grid-template-columns: 1fr;
-    text-align: center;
+  .period-cards {
+    grid-template-columns: repeat(2, 1fr);
   }
   
-  .cash-flow-table :deep(.p-datatable-thead > tr > th),
-  .cash-flow-table :deep(.p-datatable-tbody > tr > td) {
-    padding: 0.25rem;
-    font-size: 0.7rem;
+  .details-summary {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .compact-cash-flow-table :deep(.p-datatable-thead > tr > th),
+  .compact-cash-flow-table :deep(.p-datatable-tbody > tr > td) {
+    padding: 0.2rem;
+    font-size: 0.65rem;
   }
 }
 </style>
