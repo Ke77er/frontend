@@ -19,6 +19,8 @@ export function useCashFlowData() {
       dataFim
     )
     
+    console.log('Dados filtrados para fluxo de caixa:', filteredData.length, 'itens')
+    
     // Determinar se usar dias ou meses baseado no intervalo
     const diffDays = Math.ceil((dataFim - dataInicio) / (1000 * 60 * 60 * 24))
     const usarMeses = diffDays > 62 // Mais de 2 meses, usar agrupamento mensal
@@ -133,8 +135,8 @@ export function useCashFlowData() {
         
         if (usarMeses) {
           if ((periodo.isCurrentMonth) && isSameMonth(dataItem, periodo.date)) {
-            // Mês atual: separar realizado e previsto
-            const isRealizado = item.baixado === true
+            // Mês atual: separar realizado e previsto baseado no campo 'baixado'
+            const isRealizado = item.baixado === true || item.baixado === 1
             if ((periodo.type === 'realizado' && isRealizado) || 
                 (periodo.type === 'previsto' && !isRealizado)) {
               pertenceAoPeriodo = true
@@ -144,8 +146,8 @@ export function useCashFlowData() {
           }
         } else {
           if ((periodo.isCurrentDay) && isSameDay(dataItem, periodo.date)) {
-            // Dia atual: separar realizado e previsto
-            const isRealizado = item.baixado === true
+            // Dia atual: separar realizado e previsto baseado no campo 'baixado'
+            const isRealizado = item.baixado === true || item.baixado === 1
             if ((periodo.type === 'realizado' && isRealizado) || 
                 (periodo.type === 'previsto' && !isRealizado)) {
               pertenceAoPeriodo = true
@@ -166,6 +168,9 @@ export function useCashFlowData() {
     const linhas = Array.from(agrupado.values()).sort((a, b) =>
       a.categoria.localeCompare(b.categoria)
     )
+    
+    console.log('Períodos gerados:', periodos.length)
+    console.log('Categorias processadas:', linhas.length)
     
     return { linhas, periodos }
   }
@@ -192,12 +197,14 @@ export function useCashFlowData() {
           const pertenceAoPeriodo = periodo.isCurrentMonth ? 
             isSameMonth(dataItem, periodo.date) : 
             isSameDay(dataItem, periodo.date)
-          return pertenceAoPeriodo && item.baixado === true
+          const isRealizado = item.baixado === true || item.baixado === 1
+          return pertenceAoPeriodo && isRealizado
         } else if (periodo.type === 'previsto') {
           const pertenceAoPeriodo = periodo.isCurrentMonth ? 
             isSameMonth(dataItem, periodo.date) : 
             isSameDay(dataItem, periodo.date)
-          return pertenceAoPeriodo && item.baixado !== true
+          const isRealizado = item.baixado === true || item.baixado === 1
+          return pertenceAoPeriodo && !isRealizado
         }
       } else {
         // Outros períodos
@@ -217,10 +224,10 @@ export function useCashFlowData() {
     
     const resultado = detailsData
       .map((item, index) => {
-        // Determinar se é realizado ou previsto baseado na data e status
+        // Determinar se é realizado ou previsto baseado no campo 'baixado'
         const dataItem = new Date(item.data_ymd)
         const hoje = new Date()
-        const isRealizado = item.baixado === true
+        const isRealizado = item.baixado === true || item.baixado === 1
         const isPastDue = dataItem < hoje
         
         let status = 'Previsto'
@@ -242,7 +249,7 @@ export function useCashFlowData() {
           totalAberto: isRealizado ? 0 : item.valor,
           status: status,
           observacoes: item.observacoes || '',
-          baixado: item.baixado
+          baixado: isRealizado
         }
       })
       .sort((a, b) => {
@@ -266,6 +273,8 @@ export function useCashFlowData() {
       dataInicio,
       dataFim
     )
+
+    console.log('Dados para histórico:', filteredData.length, 'itens')
 
     const dias = eachDayOfInterval({ start: dataInicio, end: dataFim })
     let saldoAcumulado = 0
@@ -298,6 +307,8 @@ export function useCashFlowData() {
         saldoAcumulado
       }
     })
+    
+    console.log('Histórico gerado:', historyData.length, 'dias')
     
     return historyData
   }

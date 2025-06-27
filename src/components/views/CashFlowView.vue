@@ -73,29 +73,29 @@
               v-for="(item, index) in historyData" 
               :key="index"
               class="chart-day"
-              :style="{ left: `${(index / (historyData.length - 1)) * 100}%` }"
+              :style="{ left: `${(index / Math.max(historyData.length - 1, 1)) * 100}%` }"
             >
               <!-- Barras de entrada e saída -->
               <div class="chart-bars">
                 <div 
                   v-if="item.entradas > 0"
                   class="chart-bar positive"
-                  :style="{ height: `${Math.abs(item.entradas) / maxValue * 100}px` }"
+                  :style="{ height: `${Math.abs(item.entradas) / Math.max(maxValue, 1) * 100}px` }"
                   :title="`Entradas: ${formatCurrency(item.entradas)}`"
                 ></div>
                 <div 
                   v-if="item.saidas < 0"
                   class="chart-bar negative"
-                  :style="{ height: `${Math.abs(item.saidas) / maxValue * 100}px` }"
+                  :style="{ height: `${Math.abs(item.saidas) / Math.max(maxValue, 1) * 100}px` }"
                   :title="`Saídas: ${formatCurrency(item.saidas)}`"
                 ></div>
               </div>
               
-              <!-- Linha do saldo acumulado -->
+              <!-- Ponto do saldo acumulado -->
               <div 
                 class="balance-point"
                 :style="{ 
-                  bottom: `${120 + (item.saldoAcumulado / maxBalance * 60)}px`,
+                  bottom: `${120 + (item.saldoAcumulado / Math.max(maxBalance, 1) * 60)}px`,
                   backgroundColor: item.saldoAcumulado >= 0 ? '#10b981' : '#ef4444'
                 }"
                 :title="`Saldo: ${formatCurrency(item.saldoAcumulado)}`"
@@ -278,7 +278,7 @@
 import { ref, computed, watch } from 'vue'
 import { useCashFlowData } from '../../composables/useCashFlowData'
 import { useReadonlyParametros } from '../../composables/useParametros'
-import { format, eachDayOfInterval, differenceInDays } from 'date-fns'
+import { format, eachDayOfInterval } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
@@ -292,7 +292,7 @@ const selectedDetails = ref({
   items: []
 })
 
-const { dataInicio, dataFim } = useReadonlyParametros()
+const { dataInicio, dataFim, empresaSelecionada } = useReadonlyParametros()
 const { generateCashFlowData, getDetailsForPeriod, getHistoryData } = useCashFlowData()
 
 const linhas = ref([])
@@ -327,18 +327,21 @@ const totals = computed(() => {
 const maxValue = computed(() => {
   if (historyData.value.length === 0) return 1000
   return Math.max(
-    ...historyData.value.map(item => Math.max(Math.abs(item.entradas), Math.abs(item.saidas)))
+    ...historyData.value.map(item => Math.max(Math.abs(item.entradas), Math.abs(item.saidas))),
+    1000
   )
 })
 
 const maxBalance = computed(() => {
   if (historyData.value.length === 0) return 1000
   return Math.max(
-    ...historyData.value.map(item => Math.abs(item.saldoAcumulado))
+    ...historyData.value.map(item => Math.abs(item.saldoAcumulado)),
+    1000
   )
 })
 
 const balanceLinePoints = computed(() => {
+  if (historyData.value.length === 0) return ''
   return historyData.value.map((item, index) => {
     const x = index * 20
     const y = 120 - (item.saldoAcumulado / maxBalance.value * 60)
@@ -413,24 +416,23 @@ const updateData = async () => {
   
   loading.value = true
   try {
+    console.log('Atualizando dados para empresa:', empresaSelecionada.value)
+    
     const result = await generateCashFlowData(dataInicio.value, dataFim.value)
     linhas.value = result.linhas
-    
-    // Adicionar labels curtos e tipos para os períodos
-    periodos.value = result.periodos.map(p => ({
-      ...p,
-      shortLabel: p.label.length > 8 ? p.label.substring(0, 8) : p.label,
-      typeLabel: p.type === 'realizado' ? 'Realizado' : 'Previsto'
-    }))
+    periodos.value = result.periodos
 
     // Gerar dados do histórico
     historyData.value = await getHistoryData(dataInicio.value, dataFim.value)
+    
+    console.log('Dados atualizados - Linhas:', linhas.value.length, 'Períodos:', periodos.value.length, 'Histórico:', historyData.value.length)
   } finally {
     loading.value = false
   }
 }
 
-watch([dataInicio, dataFim], updateData, { immediate: true })
+// Watch para mudanças nos parâmetros, incluindo empresa
+watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true })
 </script>
 
 <style scoped>
