@@ -1,31 +1,46 @@
 import { ref, computed } from 'vue'
 import { useReadonlyParametros } from './useParametros'
 
-// Importar dados das empresas
-import fluxoEmpresa1 from '../assets/fluxo.json'
-// Adicione mais imports conforme necessário
-// import fluxoEmpresa2 from '../assets/empresa2.json'
-// import fluxoEmpresa3 from '../assets/empresa3.json'
+// Importar dados das empresas dinamicamente
+const empresasData = {}
 
-const empresasData = {
-  'empresa1': fluxoEmpresa1,
-  // 'empresa2': fluxoEmpresa2,
-  // 'empresa3': fluxoEmpresa3,
+// Função para carregar dados dinamicamente
+const loadCompanyData = async () => {
+  try {
+    // Carregar Malta Advocacia
+    const maltaData = await import('../assets/Malta_Advocacia.json')
+    empresasData['malta_advocacia'] = maltaData.default
+
+    // Carregar Codex Empreendedorismo
+    const codexData = await import('../assets/Codex_empreendedorismo.json')
+    empresasData['codex_empreendedorismo'] = codexData.default
+
+    // Carregar Fluxo (empresa original)
+    const fluxoData = await import('../assets/fluxo.json')
+    empresasData['fluxo'] = fluxoData.default
+
+    console.log('Dados das empresas carregados:', Object.keys(empresasData))
+  } catch (error) {
+    console.error('Erro ao carregar dados das empresas:', error)
+  }
 }
+
+// Carregar dados na inicialização
+loadCompanyData()
 
 export function useDataService() {
   const { empresaSelecionada } = useReadonlyParametros()
   
   const data = computed(() => {
-    const empresa = empresaSelecionada.value || 'empresa1'
+    const empresa = empresaSelecionada.value || 'malta_advocacia'
     return empresasData[empresa] || []
   })
   
   const getAvailableCompanies = () => {
     return [
-      { label: 'Empresa 1', value: 'empresa1' },
-      // { label: 'Empresa 2', value: 'empresa2' },
-      // { label: 'Empresa 3', value: 'empresa3' },
+      { label: 'Malta Advocacia', value: 'malta_advocacia' },
+      { label: 'Codex Empreendedorismo', value: 'codex_empreendedorismo' },
+      { label: 'Fluxo (Original)', value: 'fluxo' }
     ]
   }
   

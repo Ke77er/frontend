@@ -1,6 +1,6 @@
 import { useDataService } from './useDataService'
 import { useReadonlyParametros } from './useParametros'
-import { format, eachDayOfInterval, eachMonthOfInterval, isSameMonth, isSameDay, isAfter, isBefore, isToday } from 'date-fns'
+import { format, eachDayOfInterval, eachMonthOfInterval, isSameMonth, isSameDay, isBefore, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 export function useCashFlowData() {
@@ -32,19 +32,24 @@ export function useCashFlowData() {
       meses.forEach(mes => {
         const isCurrentMonth = isSameMonth(mes, hoje)
         const mesKey = format(mes, 'yyyy-MM')
+        const mesLabel = format(mes, 'MMM/yy', { locale: ptBR })
         
         if (isCurrentMonth) {
           // Mês atual: duas colunas (realizado e previsto)
           periodos.push({
             key: `${mesKey}-realizado`,
-            label: `${format(mes, 'MMM', { locale: ptBR })} Realizado`,
+            label: `${mesLabel} Realizado`,
+            shortLabel: mesLabel,
+            typeLabel: 'Realizado',
             type: 'realizado',
             date: mes,
             isCurrentMonth: true
           })
           periodos.push({
             key: `${mesKey}-previsto`,
-            label: `${format(mes, 'MMM', { locale: ptBR })} Previsto`,
+            label: `${mesLabel} Previsto`,
+            shortLabel: mesLabel,
+            typeLabel: 'Previsto',
             type: 'previsto',
             date: mes,
             isCurrentMonth: true
@@ -54,7 +59,8 @@ export function useCashFlowData() {
           const isPast = isBefore(mes, hoje)
           periodos.push({
             key: mesKey,
-            label: format(mes, 'MMM', { locale: ptBR }),
+            label: mesLabel,
+            shortLabel: mesLabel,
             type: isPast ? 'realizado' : 'previsto',
             date: mes,
             isCurrentMonth: false
@@ -66,20 +72,25 @@ export function useCashFlowData() {
       
       dias.forEach(dia => {
         const diaKey = format(dia, 'yyyy-MM-dd')
+        const diaLabel = format(dia, 'dd/MM', { locale: ptBR })
         const isCurrentDay = isToday(dia)
         
         if (isCurrentDay) {
           // Dia atual: duas colunas (realizado e previsto)
           periodos.push({
             key: `${diaKey}-realizado`,
-            label: `${format(dia, 'dd/MM', { locale: ptBR })} Realizado`,
+            label: `${diaLabel} Realizado`,
+            shortLabel: diaLabel,
+            typeLabel: 'Realizado',
             type: 'realizado',
             date: dia,
             isCurrentDay: true
           })
           periodos.push({
             key: `${diaKey}-previsto`,
-            label: `${format(dia, 'dd/MM', { locale: ptBR })} Previsto`,
+            label: `${diaLabel} Previsto`,
+            shortLabel: diaLabel,
+            typeLabel: 'Previsto',
             type: 'previsto',
             date: dia,
             isCurrentDay: true
@@ -89,7 +100,8 @@ export function useCashFlowData() {
           const isPast = isBefore(dia, hoje)
           periodos.push({
             key: diaKey,
-            label: format(dia, 'dd/MM', { locale: ptBR }),
+            label: diaLabel,
+            shortLabel: diaLabel,
             type: isPast ? 'realizado' : 'previsto',
             date: dia,
             isCurrentDay: false

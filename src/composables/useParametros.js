@@ -4,7 +4,7 @@ import { startOfMonth, endOfMonth } from 'date-fns'
 // Estado global reativo
 const categoriasSelecionadas = ref([])
 const contasSelecionadas = ref([])
-const empresaSelecionada = ref('')
+const empresaSelecionada = ref('malta_advocacia') // Empresa padrão
 const dataInicio = ref(startOfMonth(new Date()))
 const dataFim = ref(endOfMonth(new Date()))
 
