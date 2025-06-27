@@ -15,10 +15,6 @@ const loadCompanyData = async () => {
     const codexData = await import('../assets/Codex_empreendedorismo.json')
     empresasData['codex_empreendedorismo'] = codexData.default
 
-    // Carregar Fluxo (empresa original)
-    const fluxoData = await import('../assets/fluxo.json')
-    empresasData['fluxo'] = fluxoData.default
-
     console.log('Dados das empresas carregados:', Object.keys(empresasData))
   } catch (error) {
     console.error('Erro ao carregar dados das empresas:', error)
@@ -39,8 +35,7 @@ export function useDataService() {
   const getAvailableCompanies = () => {
     return [
       { label: 'Malta Advocacia', value: 'malta_advocacia' },
-      { label: 'Codex Empreendedorismo', value: 'codex_empreendedorismo' },
-      { label: 'Fluxo (Original)', value: 'fluxo' }
+      { label: 'Codex Empreendedorismo', value: 'codex_empreendedorismo' }
     ]
   }
   
