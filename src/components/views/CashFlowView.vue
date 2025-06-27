@@ -46,6 +46,79 @@
       </div>
     </div>
 
+    <!-- Histórico Visual -->
+    <div class="history-section">
+      <div class="history-header">
+        <h3>Histórico do Período</h3>
+        <div class="history-legend">
+          <div class="legend-item">
+            <div class="legend-color positive"></div>
+            <span>Entradas</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color negative"></div>
+            <span>Saídas</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color balance"></div>
+            <span>Saldo Acumulado</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="history-chart">
+        <div class="chart-container">
+          <div class="chart-grid">
+            <div 
+              v-for="(item, index) in historyData" 
+              :key="index"
+              class="chart-day"
+              :style="{ left: `${(index / (historyData.length - 1)) * 100}%` }"
+            >
+              <!-- Barras de entrada e saída -->
+              <div class="chart-bars">
+                <div 
+                  v-if="item.entradas > 0"
+                  class="chart-bar positive"
+                  :style="{ height: `${Math.abs(item.entradas) / maxValue * 100}px` }"
+                  :title="`Entradas: ${formatCurrency(item.entradas)}`"
+                ></div>
+                <div 
+                  v-if="item.saidas < 0"
+                  class="chart-bar negative"
+                  :style="{ height: `${Math.abs(item.saidas) / maxValue * 100}px` }"
+                  :title="`Saídas: ${formatCurrency(item.saidas)}`"
+                ></div>
+              </div>
+              
+              <!-- Linha do saldo acumulado -->
+              <div 
+                class="balance-point"
+                :style="{ 
+                  bottom: `${120 + (item.saldoAcumulado / maxBalance * 60)}px`,
+                  backgroundColor: item.saldoAcumulado >= 0 ? '#10b981' : '#ef4444'
+                }"
+                :title="`Saldo: ${formatCurrency(item.saldoAcumulado)}`"
+              ></div>
+              
+              <!-- Label do dia -->
+              <div class="chart-label">{{ item.label }}</div>
+            </div>
+            
+            <!-- Linha do saldo acumulado -->
+            <svg class="balance-line" :viewBox="`0 0 ${historyData.length * 20} 200`">
+              <polyline
+                :points="balanceLinePoints"
+                fill="none"
+                stroke="#8b5cf6"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabela de Fluxo -->
     <div class="table-container">
       <div class="table-header">
@@ -63,13 +136,10 @@
         scrollHeight="600px"
         size="small"
       >
-        <Column field="categoria" header="Categoria" :frozen="true" style="min-width: 280px; background: #f8f9fa;">
+        <Column field="categoria" header="Categoria" :frozen="true" style="min-width: 200px; background: #f8f9fa;">
           <template #body="{ data }">
             <div class="category-cell">
               <span class="category-name">{{ data.categoria }}</span>
-              <div class="category-total">
-                <ValueDisplay :value="data.total" type="currency" :class="getValueClass(data.total)" />
-              </div>
             </div>
           </template>
         </Column>
@@ -79,13 +149,13 @@
           :key="periodo.key"
           :field="periodo.key"
           :header="periodo.label"
-          style="min-width: 100px; text-align: center;"
+          style="min-width: 80px; text-align: center;"
           :class="getPeriodColumnClass(periodo)"
         >
           <template #header>
             <div class="period-header">
               <div class="period-date">{{ periodo.shortLabel || periodo.label }}</div>
-              <div class="period-type">{{ periodo.typeLabel }}</div>
+              <div v-if="periodo.typeLabel" class="period-type">{{ periodo.typeLabel }}</div>
             </div>
           </template>
           <template #body="{ data }">
@@ -99,6 +169,15 @@
                 type="currency" 
                 :class="getValueClass(data[periodo.key] || 0)"
               />
+            </div>
+          </template>
+        </Column>
+        
+        <!-- Coluna Total -->
+        <Column field="total" header="Total" style="min-width: 100px; background: #e3f2fd;" :frozen="true" frozenPosition="right">
+          <template #body="{ data }">
+            <div class="total-cell">
+              <ValueDisplay :value="data.total" type="currency" emphasis :class="getValueClass(data.total)" />
             </div>
           </template>
         </Column>
@@ -199,7 +278,7 @@
 import { ref, computed, watch } from 'vue'
 import { useCashFlowData } from '../../composables/useCashFlowData'
 import { useReadonlyParametros } from '../../composables/useParametros'
-import { format } from 'date-fns'
+import { format, eachDayOfInterval, differenceInDays } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
@@ -214,10 +293,11 @@ const selectedDetails = ref({
 })
 
 const { dataInicio, dataFim } = useReadonlyParametros()
-const { generateCashFlowData, getDetailsForPeriod } = useCashFlowData()
+const { generateCashFlowData, getDetailsForPeriod, getHistoryData } = useCashFlowData()
 
 const linhas = ref([])
 const periodos = ref([])
+const historyData = ref([])
 
 const detailsTitle = computed(() => 
   `${selectedDetails.value.categoria} - ${selectedDetails.value.periodo}`
@@ -242,6 +322,36 @@ const totals = computed(() => {
     saldo: realizado + previsto
   }
 })
+
+// Dados para o histórico visual
+const maxValue = computed(() => {
+  if (historyData.value.length === 0) return 1000
+  return Math.max(
+    ...historyData.value.map(item => Math.max(Math.abs(item.entradas), Math.abs(item.saidas)))
+  )
+})
+
+const maxBalance = computed(() => {
+  if (historyData.value.length === 0) return 1000
+  return Math.max(
+    ...historyData.value.map(item => Math.abs(item.saldoAcumulado))
+  )
+})
+
+const balanceLinePoints = computed(() => {
+  return historyData.value.map((item, index) => {
+    const x = index * 20
+    const y = 120 - (item.saldoAcumulado / maxBalance.value * 60)
+    return `${x},${y}`
+  }).join(' ')
+})
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  }).format(value)
+}
 
 const formatDateRange = (inicio, fim) => {
   if (!inicio || !fim) return ''
@@ -277,7 +387,7 @@ const getPeriodColumnClass = (periodo) => {
   const classes = ['period-column']
   if (periodo.type === 'realizado') classes.push('realizado-column')
   if (periodo.type === 'previsto') classes.push('previsto-column')
-  if (periodo.isCurrentMonth) classes.push('current-month-column')
+  if (periodo.isCurrentMonth || periodo.isCurrentDay) classes.push('current-period-column')
   return classes.join(' ')
 }
 
@@ -312,6 +422,9 @@ const updateData = async () => {
       shortLabel: p.label.length > 8 ? p.label.substring(0, 8) : p.label,
       typeLabel: p.type === 'realizado' ? 'Realizado' : 'Previsto'
     }))
+
+    // Gerar dados do histórico
+    historyData.value = await getHistoryData(dataInicio.value, dataFim.value)
   } finally {
     loading.value = false
   }
@@ -411,6 +524,145 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
   border: 1px solid #dee2e6;
 }
 
+/* Histórico Visual */
+.history-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(26, 54, 93, 0.08);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.history-header h3 {
+  margin: 0;
+  color: var(--primary-color);
+  font-size: 1.25rem;
+}
+
+.history-legend {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--neutral-600);
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.legend-color.positive {
+  background: #10b981;
+}
+
+.legend-color.negative {
+  background: #ef4444;
+}
+
+.legend-color.balance {
+  background: #8b5cf6;
+}
+
+.history-chart {
+  height: 200px;
+  position: relative;
+  background: linear-gradient(135deg, #f8fafb 0%, #e8f0f2 100%);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.chart-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.chart-grid {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.chart-day {
+  position: absolute;
+  bottom: 0;
+  width: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.chart-bars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  margin-bottom: 20px;
+}
+
+.chart-bar {
+  width: 8px;
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+  transition: all 0.3s ease;
+}
+
+.chart-bar:hover {
+  transform: scaleY(1.1);
+}
+
+.chart-bar.positive {
+  background: linear-gradient(to top, #10b981, #34d399);
+}
+
+.chart-bar.negative {
+  background: linear-gradient(to top, #ef4444, #f87171);
+}
+
+.balance-point {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  position: absolute;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.balance-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.chart-label {
+  font-size: 0.7rem;
+  color: var(--neutral-500);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  margin-top: 0.5rem;
+}
+
 .table-container {
   background: white;
   border-radius: 8px;
@@ -455,7 +707,7 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
   color: #856404;
 }
 
-.cash-flow-table :deep(.current-month-column th) {
+.cash-flow-table :deep(.current-period-column th) {
   background: #cce5ff;
   color: #004085;
   font-weight: 700;
@@ -496,7 +748,6 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
 
 .category-cell {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
 }
@@ -508,9 +759,12 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
   flex: 1;
 }
 
-.category-total {
-  font-weight: 600;
-  font-size: 0.7rem;
+.total-cell {
+  text-align: center;
+  font-weight: 700;
+  background: rgba(227, 242, 253, 0.5);
+  padding: 0.25rem;
+  border-radius: 3px;
 }
 
 .value-cell {
@@ -656,6 +910,12 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
     grid-template-columns: 1fr;
   }
   
+  .history-legend {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  
   .details-header {
     flex-direction: column;
     align-items: flex-start;
@@ -671,6 +931,10 @@ watch([dataInicio, dataFim], updateData, { immediate: true })
   .cash-flow-table :deep(.p-datatable-tbody > tr > td) {
     padding: 0.25rem;
     font-size: 0.7rem;
+  }
+  
+  .chart-label {
+    font-size: 0.6rem;
   }
 }
 </style>

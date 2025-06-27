@@ -1,6 +1,6 @@
 import { useDataService } from './useDataService'
 import { useReadonlyParametros } from './useParametros'
-import { format, eachDayOfInterval, eachMonthOfInterval, isSameMonth, isSameDay, isAfter, isBefore } from 'date-fns'
+import { format, eachDayOfInterval, eachMonthOfInterval, isSameMonth, isSameDay, isAfter, isBefore, isToday } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 export function useCashFlowData() {
@@ -37,14 +37,14 @@ export function useCashFlowData() {
           // Mês atual: duas colunas (realizado e previsto)
           periodos.push({
             key: `${mesKey}-realizado`,
-            label: `${format(mes, 'dd/MM', { locale: ptBR })} Realizado`,
+            label: `${format(mes, 'MMM', { locale: ptBR })} Realizado`,
             type: 'realizado',
             date: mes,
             isCurrentMonth: true
           })
           periodos.push({
             key: `${mesKey}-previsto`,
-            label: `${format(mes, 'dd/MM', { locale: ptBR })} Previsto`,
+            label: `${format(mes, 'MMM', { locale: ptBR })} Previsto`,
             type: 'previsto',
             date: mes,
             isCurrentMonth: true
@@ -54,7 +54,7 @@ export function useCashFlowData() {
           const isPast = isBefore(mes, hoje)
           periodos.push({
             key: mesKey,
-            label: format(mes, 'dd/MM', { locale: ptBR }),
+            label: format(mes, 'MMM', { locale: ptBR }),
             type: isPast ? 'realizado' : 'previsto',
             date: mes,
             isCurrentMonth: false
@@ -66,15 +66,35 @@ export function useCashFlowData() {
       
       dias.forEach(dia => {
         const diaKey = format(dia, 'yyyy-MM-dd')
-        const isPast = isBefore(dia, hoje) || isSameDay(dia, hoje)
+        const isCurrentDay = isToday(dia)
         
-        periodos.push({
-          key: diaKey,
-          label: format(dia, 'dd/MM', { locale: ptBR }),
-          type: isPast ? 'realizado' : 'previsto',
-          date: dia,
-          isCurrentMonth: isSameMonth(dia, hoje)
-        })
+        if (isCurrentDay) {
+          // Dia atual: duas colunas (realizado e previsto)
+          periodos.push({
+            key: `${diaKey}-realizado`,
+            label: `${format(dia, 'dd/MM', { locale: ptBR })} Realizado`,
+            type: 'realizado',
+            date: dia,
+            isCurrentDay: true
+          })
+          periodos.push({
+            key: `${diaKey}-previsto`,
+            label: `${format(dia, 'dd/MM', { locale: ptBR })} Previsto`,
+            type: 'previsto',
+            date: dia,
+            isCurrentDay: true
+          })
+        } else {
+          // Outros dias: uma coluna
+          const isPast = isBefore(dia, hoje)
+          periodos.push({
+            key: diaKey,
+            label: format(dia, 'dd/MM', { locale: ptBR }),
+            type: isPast ? 'realizado' : 'previsto',
+            date: dia,
+            isCurrentDay: false
+          })
+        }
       })
     }
     
@@ -100,7 +120,7 @@ export function useCashFlowData() {
         let pertenceAoPeriodo = false
         
         if (usarMeses) {
-          if (periodo.isCurrentMonth && isSameMonth(dataItem, periodo.date)) {
+          if ((periodo.isCurrentMonth) && isSameMonth(dataItem, periodo.date)) {
             // Mês atual: separar realizado e previsto
             const isRealizado = item.baixado === true
             if ((periodo.type === 'realizado' && isRealizado) || 
@@ -111,7 +131,14 @@ export function useCashFlowData() {
             pertenceAoPeriodo = true
           }
         } else {
-          if (isSameDay(dataItem, periodo.date)) {
+          if ((periodo.isCurrentDay) && isSameDay(dataItem, periodo.date)) {
+            // Dia atual: separar realizado e previsto
+            const isRealizado = item.baixado === true
+            if ((periodo.type === 'realizado' && isRealizado) || 
+                (periodo.type === 'previsto' && !isRealizado)) {
+              pertenceAoPeriodo = true
+            }
+          } else if (!periodo.isCurrentDay && isSameDay(dataItem, periodo.date)) {
             pertenceAoPeriodo = true
           }
         }
@@ -147,12 +174,18 @@ export function useCashFlowData() {
       const dataItem = new Date(item.data_ymd)
       
       // Verificar se o item pertence ao período específico
-      if (periodo.isCurrentMonth) {
-        // Mês atual com separação realizado/previsto
+      if (periodo.isCurrentMonth || periodo.isCurrentDay) {
+        // Período atual com separação realizado/previsto
         if (periodo.type === 'realizado') {
-          return isSameMonth(dataItem, periodo.date) && item.baixado === true
+          const pertenceAoPeriodo = periodo.isCurrentMonth ? 
+            isSameMonth(dataItem, periodo.date) : 
+            isSameDay(dataItem, periodo.date)
+          return pertenceAoPeriodo && item.baixado === true
         } else if (periodo.type === 'previsto') {
-          return isSameMonth(dataItem, periodo.date) && item.baixado !== true
+          const pertenceAoPeriodo = periodo.isCurrentMonth ? 
+            isSameMonth(dataItem, periodo.date) : 
+            isSameDay(dataItem, periodo.date)
+          return pertenceAoPeriodo && item.baixado !== true
         }
       } else {
         // Outros períodos
@@ -213,9 +246,53 @@ export function useCashFlowData() {
     
     return resultado
   }
+
+  const getHistoryData = async (dataInicio, dataFim) => {
+    const filteredData = getFilteredData(
+      categoriasSelecionadas.value, 
+      contasSelecionadas.value,
+      dataInicio,
+      dataFim
+    )
+
+    const dias = eachDayOfInterval({ start: dataInicio, end: dataFim })
+    let saldoAcumulado = 0
+    
+    const historyData = dias.map(dia => {
+      const diaFormatado = format(dia, 'yyyy-MM-dd')
+      
+      // Filtrar dados do dia
+      const dadosDoDia = filteredData.filter(item => 
+        format(new Date(item.data_ymd), 'yyyy-MM-dd') === diaFormatado
+      )
+      
+      // Calcular entradas e saídas
+      const entradas = dadosDoDia
+        .filter(item => item.valor > 0)
+        .reduce((sum, item) => sum + item.valor, 0)
+      
+      const saidas = dadosDoDia
+        .filter(item => item.valor < 0)
+        .reduce((sum, item) => sum + item.valor, 0)
+      
+      // Atualizar saldo acumulado
+      saldoAcumulado += entradas + saidas
+      
+      return {
+        date: dia,
+        label: format(dia, 'dd', { locale: ptBR }),
+        entradas,
+        saidas,
+        saldoAcumulado
+      }
+    })
+    
+    return historyData
+  }
   
   return {
     generateCashFlowData,
-    getDetailsForPeriod
+    getDetailsForPeriod,
+    getHistoryData
   }
 }
