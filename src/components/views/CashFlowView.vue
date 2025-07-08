@@ -145,6 +145,40 @@
             </tr>
           </thead>
           <tbody>
+            <!-- Saldos Iniciais -->
+            <tr v-for="saldoInicial in saldosIniciais" :key="saldoInicial.categoria" class="data-row saldo-inicial-row">
+              <td class="category-cell saldo-inicial-cell">
+                <span class="category-name">{{ saldoInicial.categoria }}</span>
+              </td>
+              <td 
+                v-for="periodo in periodos" 
+                :key="periodo.key"
+                :class="getPeriodCellClass(periodo, saldoInicial[periodo.key])"
+                class="value-cell saldo-inicial-value"
+                @click="showDetails(saldoInicial.categoria, periodo, saldoInicial[periodo.key])"
+              >
+                <ValueDisplay 
+                  :value="saldoInicial[periodo.key] || 0" 
+                  type="currency" 
+                  :class="getValueClass(saldoInicial[periodo.key] || 0)"
+                />
+              </td>
+              <td class="total-cell saldo-inicial-total">
+                <ValueDisplay 
+                  :value="saldoInicial.total" 
+                  type="currency" 
+                  emphasis 
+                  :class="getValueClass(saldoInicial.total)" 
+                />
+              </td>
+            </tr>
+            
+            <!-- Separador Saldos Iniciais -->
+            <tr class="separator-row">
+              <td colspan="100%" class="separator-cell"></td>
+            </tr>
+            
+            <!-- Categorias Normais -->
             <tr v-for="linha in linhas" :key="linha.categoria" class="data-row">
               <td class="category-cell">
                 <span class="category-name">{{ linha.categoria }}</span>
@@ -168,6 +202,39 @@
                   type="currency" 
                   emphasis 
                   :class="getValueClass(linha.total)" 
+                />
+              </td>
+            </tr>
+            
+            <!-- Separador Resultados -->
+            <tr class="separator-row">
+              <td colspan="100%" class="separator-cell"></td>
+            </tr>
+            
+            <!-- Linha de Resultado -->
+            <tr class="data-row resultado-row">
+              <td class="category-cell resultado-cell">
+                <span class="category-name resultado-name">RESULTADO</span>
+              </td>
+              <td 
+                v-for="periodo in periodos" 
+                :key="periodo.key"
+                :class="getPeriodCellClass(periodo, getResultadoPeriodo(periodo))"
+                class="value-cell resultado-value"
+              >
+                <ValueDisplay 
+                  :value="getResultadoPeriodo(periodo)" 
+                  type="currency" 
+                  emphasis
+                  :class="getValueClass(getResultadoPeriodo(periodo))"
+                />
+              </td>
+              <td class="total-cell resultado-total">
+                <ValueDisplay 
+                  :value="getResultadoTotal()" 
+                  type="currency" 
+                  emphasis 
+                  :class="getValueClass(getResultadoTotal())" 
                 />
               </td>
             </tr>
@@ -277,6 +344,7 @@ const { generateCashFlowData, getDetailsForPeriod, getHistoryData } = useCashFlo
 const linhas = ref([])
 const periodos = ref([])
 const historyData = ref([])
+const saldosIniciais = ref([])
 
 const detailsTitle = computed(() => 
   `${selectedDetails.value.categoria} - ${selectedDetails.value.periodo}`
@@ -390,6 +458,18 @@ const showDetails = async (categoria, periodo, valor) => {
   showDetailsDialog.value = true
 }
 
+const getResultadoPeriodo = (periodo) => {
+  return linhas.value.reduce((sum, linha) => {
+    return sum + (linha[periodo.key] || 0)
+  }, 0)
+}
+
+const getResultadoTotal = () => {
+  return linhas.value.reduce((sum, linha) => {
+    return sum + linha.total
+  }, 0)
+}
+
 const updateData = async () => {
   if (!dataInicio.value || !dataFim.value) return
   
@@ -400,6 +480,18 @@ const updateData = async () => {
     const result = await generateCashFlowData(dataInicio.value, dataFim.value)
     linhas.value = result.linhas
     periodos.value = result.periodos
+    
+    // Gerar saldos iniciais (exemplo com dados fictícios)
+    saldosIniciais.value = [
+      {
+        categoria: 'SALDO INICIAL',
+        total: 50000,
+        ...periodos.value.reduce((acc, periodo) => {
+          acc[periodo.key] = 50000 / periodos.value.length
+          return acc
+        }, {})
+      }
+    ]
 
     // Gerar dados do histórico
     historyData.value = await getHistoryData(dataInicio.value, dataFim.value)
@@ -677,7 +769,7 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 .cash-flow-table-new {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.75rem;
+  font-size: 8px;
 }
 
 .cash-flow-table-new th,
@@ -769,7 +861,7 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 }
 
 .category-name {
-  font-size: 0.75rem;
+  font-size: 8px;
 }
 
 .value-cell {
@@ -819,6 +911,68 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 
 .neutral-value {
   color: #6c757d !important;
+}
+
+/* Estilos para Saldos Iniciais */
+.saldo-inicial-row {
+  background: #e8f5e8 !important;
+}
+
+.saldo-inicial-cell {
+  background: #d4edda !important;
+  font-weight: 700 !important;
+  color: #155724 !important;
+}
+
+.saldo-inicial-value {
+  background: #e8f5e8 !important;
+  font-weight: 600 !important;
+}
+
+.saldo-inicial-total {
+  background: #d4edda !important;
+  font-weight: 700 !important;
+  color: #155724 !important;
+}
+
+/* Estilos para Resultado */
+.resultado-row {
+  background: #fff3cd !important;
+  border-top: 2px solid #ffc107 !important;
+}
+
+.resultado-cell {
+  background: #ffc107 !important;
+  font-weight: 700 !important;
+  color: #856404 !important;
+}
+
+.resultado-name {
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.resultado-value {
+  background: #fff3cd !important;
+  font-weight: 700 !important;
+}
+
+.resultado-total {
+  background: #ffc107 !important;
+  font-weight: 700 !important;
+  color: #856404 !important;
+}
+
+/* Separadores */
+.separator-row {
+  height: 8px;
+}
+
+.separator-cell {
+  background: #f8f9fa !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 /* Dialog de Detalhes */
@@ -973,7 +1127,7 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   .cash-flow-table-new th,
   .cash-flow-table-new td {
     padding: 0.25rem;
-    font-size: 0.7rem;
+    font-size: 7px;
   }
   
   .chart-label {
