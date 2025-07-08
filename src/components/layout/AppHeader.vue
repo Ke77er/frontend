@@ -3,7 +3,7 @@
     <div class="container">
       <div class="header-content">
         <div class="brand">
-          <div class="brand-icon">💼</div>
+          <div class="brand-icon"></div>
           <div class="brand-text">
             <h1 class="brand-title">Codex Finance</h1>
             <p class="brand-subtitle">Sistema de Gestão Financeira</p>
