@@ -46,15 +46,6 @@ const loadLocalData = async () => {
       console.warn('Arquivo Codex_empreendedorismo.json não encontrado localmente')
     }
 
-    // Carregar Fluxo
-    try {
-      const fluxoData = await import('../assets/fluxo.json')
-      empresasData['fluxo'] = fluxoData.default
-      console.log('Fluxo carregado localmente:', fluxoData.default.length, 'registros')
-    } catch (error) {
-      console.warn('Arquivo fluxo.json não encontrado localmente')
-    }
-
     dataLoadingStatus.value.local = true
     console.log('Dados locais carregados com sucesso')
   } catch (error) {
