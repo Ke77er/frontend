@@ -11,9 +11,8 @@ const dataLoadingStatus = ref({
 
 // URLs para Google Drive (substitua pelos IDs reais dos seus arquivos)
 const googleDriveUrls = {
-  'malta_advocacia': 'https://drive.google.com/uc?export=download&id=SEU_ID_MALTA',
-  'codex_empreendedorismo': 'https://drive.google.com/uc?export=download&id=SEU_ID_CODEX',
-  'fluxo': 'https://drive.google.com/uc?export=download&id=SEU_ID_FLUXO'
+  'malta_advocacia': 'https://drive.google.com/uc?export=download&id=1abc123',
+  'codex_empreendedorismo': 'https://drive.google.com/uc?export=download&id=1def456'
 }
 
 // URLs da API
@@ -44,6 +43,15 @@ const loadLocalData = async () => {
       console.log('Codex Empreendedorismo carregado localmente:', codexData.default.length, 'registros')
     } catch (error) {
       console.warn('Arquivo Codex_empreendedorismo.json não encontrado localmente')
+    }
+
+    // Carregar Fluxo
+    try {
+      const fluxoData = await import('../assets/fluxo.json')
+      empresasData['fluxo'] = fluxoData.default
+      console.log('Fluxo carregado localmente:', fluxoData.default.length, 'registros')
+    } catch (error) {
+      console.warn('Arquivo fluxo.json não encontrado localmente')
     }
 
     dataLoadingStatus.value.local = true
