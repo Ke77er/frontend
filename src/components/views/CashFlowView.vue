@@ -59,7 +59,61 @@ import { ptBR } from 'date-fns/locale'
 import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
 
-// Rest of the script content
+const { dataInicio, dataFim } = useReadonlyParametros()
+const { generateCashFlowData } = useCashFlowData()
+
+// Initialize reactive data
+const cashFlowData = ref({
+  linhas: [],
+  periodos: []
+})
+
+// Computed property for totals
+const totals = computed(() => {
+  if (!cashFlowData.value || !cashFlowData.value.linhas) {
+    return {
+      realizado: 0,
+      previsto: 0,
+      saldo: 0
+    }
+  }
+
+  let realizado = 0
+  let previsto = 0
+
+  cashFlowData.value.linhas.forEach(linha => {
+    if (linha.periodos) {
+      linha.periodos.forEach(periodo => {
+        if (periodo.realizado) realizado += periodo.realizado
+        if (periodo.previsto) previsto += periodo.previsto
+      })
+    }
+  })
+
+  return {
+    realizado,
+    previsto,
+    saldo: realizado + previsto
+  }
+})
+
+// Function to format date range
+const formatDateRange = (inicio, fim) => {
+  if (!inicio || !fim) return ''
+  return `${format(inicio, 'dd/MM/yyyy', { locale: ptBR })} - ${format(fim, 'dd/MM/yyyy', { locale: ptBR })}`
+}
+
+// Watch for parameter changes and load data
+watch([dataInicio, dataFim], async () => {
+  if (dataInicio.value && dataFim.value) {
+    try {
+      cashFlowData.value = await generateCashFlowData()
+    } catch (error) {
+      console.error('Error loading cash flow data:', error)
+      cashFlowData.value = { linhas: [], periodos: [] }
+    }
+  }
+}, { immediate: true })
 </script>
 
 <style scoped>
