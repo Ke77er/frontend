@@ -107,7 +107,7 @@ const formatDateRange = (inicio, fim) => {
 watch([dataInicio, dataFim], async () => {
   if (dataInicio.value && dataFim.value) {
     try {
-      cashFlowData.value = await generateCashFlowData(dataInicio.value, dataFim.value)
+      cashFlowData.value = await generateCashFlowData()
     } catch (error) {
       console.error('Error loading cash flow data:', error)
       cashFlowData.value = { linhas: [], periodos: [] }
