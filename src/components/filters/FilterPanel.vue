@@ -89,7 +89,7 @@
             @click="clearFilters"
             label="Limpar"
             icon="pi pi-times"
-            class="p-button-outlined p-button-secondary p-button-sm"
+            class="p-button-outlined p-button-sm"
           />
         </div>
       </div>
@@ -189,45 +189,46 @@ onMounted(() => {
 
 <style scoped>
 .filter-panel {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(26, 54, 93, 0.08);
+  background: var(--color-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--spacing-6);
+  border: 1px solid var(--color-border);
 }
 
 .filter-header {
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--neutral-200);
+  background: var(--color-muted);
+  padding: var(--spacing-4) var(--spacing-6);
+  border-bottom: 1px solid var(--color-border);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  transition: all 0.3s ease;
+  transition: all var(--transition-normal);
 }
 
 .filter-header:hover {
-  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+  background: var(--color-accent);
 }
 
 .filter-title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-weight: 600;
-  color: var(--primary-color);
-  font-size: 1rem;
+  gap: var(--spacing-3);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-primary);
+  font-size: var(--font-size-base);
 }
 
 .toggle-btn {
-  color: var(--primary-light);
+  color: var(--color-primary);
 }
 
 .filter-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height var(--transition-normal);
 }
 
 .filter-content.expanded {
@@ -235,23 +236,23 @@ onMounted(() => {
 }
 
 .filter-grid {
-  padding: 1.5rem;
+  padding: var(--spacing-6);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
+  gap: var(--spacing-6);
   align-items: start;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--spacing-2);
 }
 
 .filter-label {
-  font-weight: 600;
-  color: var(--neutral-600);
-  font-size: 0.875rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
 }
 
 .filter-control {
@@ -260,7 +261,7 @@ onMounted(() => {
 
 .date-controls {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-2);
   flex-wrap: wrap;
 }
 
@@ -271,21 +272,21 @@ onMounted(() => {
 
 .quick-filters {
   display: flex;
-  gap: 0.5rem;
+  gap: var(--spacing-2);
   flex-wrap: wrap;
-  margin-top: 0.5rem;
+  margin-top: var(--spacing-2);
 }
 
 .quick-btn {
-  font-size: 0.75rem;
-  padding: 0.25rem 0.75rem;
-  border-color: var(--primary-light);
-  color: var(--primary-light);
+  font-size: var(--font-size-xs);
+  padding: var(--spacing-1) var(--spacing-3);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .quick-btn:hover {
-  background: var(--primary-light);
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
 }
 
 .filter-actions {
@@ -297,7 +298,7 @@ onMounted(() => {
 @media (max-width: 1024px) {
   .filter-grid {
     grid-template-columns: 1fr;
-    gap: 1rem;
+    gap: var(--spacing-4);
   }
   
   .date-controls {

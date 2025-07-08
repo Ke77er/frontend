@@ -42,19 +42,21 @@
       
       <div class="view-controls">
         <div class="search-container">
-          <InputText
+          <BaseInput
             v-model="globalFilter"
             placeholder="Buscar em todos os campos..."
-            class="global-search"
+            prefix-icon="pi pi-search"
+            size="md"
           />
-          <i class="pi pi-search search-icon"></i>
         </div>
-        <Button
+        <BaseButton
           @click="exportData"
-          label="Exportar CSV"
           icon="pi pi-download"
-          class="p-button-outlined export-btn"
-        />
+          variant="outline"
+          size="md"
+        >
+          Exportar CSV
+        </BaseButton>
       </div>
     </div>
 
@@ -138,17 +140,19 @@
           <span>Mostrando {{ startIndex + 1 }} - {{ endIndex }} de {{ dadosFiltrados.length }} registros</span>
         </div>
         <div class="pagination-controls">
-          <Button
+          <BaseButton
             @click="previousPage"
             icon="pi pi-chevron-left"
-            class="p-button-outlined p-button-sm"
+            variant="outline"
+            size="sm"
             :disabled="currentPage === 1"
           />
           <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
-          <Button
+          <BaseButton
             @click="nextPage"
             icon="pi pi-chevron-right"
-            class="p-button-outlined p-button-sm"
+            variant="outline"
+            size="sm"
             :disabled="currentPage === totalPages"
           />
         </div>
@@ -167,6 +171,8 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import BaseInput from '../ui/BaseInput.vue'
+import BaseButton from '../ui/BaseButton.vue'
 import { useRawData } from '../../composables/useRawData'
 import { useReadonlyParametros } from '../../composables/useParametros'
 import { format } from 'date-fns'
@@ -395,29 +401,6 @@ watch([globalFilter, rowsPerPage], resetPage)
   position: relative;
   flex: 1;
   max-width: 400px;
-}
-
-.global-search {
-  width: 100%;
-  padding-right: 2.5rem;
-}
-
-.search-icon {
-  position: absolute;
-  right: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #6c757d;
-}
-
-.export-btn {
-  border-color: #28a745;
-  color: #28a745;
-}
-
-.export-btn:hover {
-  background: #28a745;
-  color: white;
 }
 
 /* Nova Tabela de Dados Brutos */
