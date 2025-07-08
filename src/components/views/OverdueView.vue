@@ -56,12 +56,13 @@
 
     <!-- Conteúdo Principal -->
     <div class="overdue-content">
-      <EmptyState
-        v-if="groupedData.length === 0"
-        icon="pi pi-check-circle"
-        title="Nenhum item atrasado"
-        :description="`Não há ${tipo.toLowerCase()} em atraso no período selecionado.`"
-      />
+      <div v-if="groupedData.length === 0" class="empty-state">
+        <div class="empty-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <h3>Nenhum item atrasado</h3>
+        <p>Não há {{ tipo.toLowerCase() }} em atraso no período selecionado.</p>
+      </div>
       
       <!-- Tabela de Atrasados Estilo Novo -->
       <div v-else class="table-container">
@@ -135,7 +136,6 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import EmptyState from '../ui/EmptyState.vue'
 import { useOverdueData } from '../../composables/useOverdueData'
 import { differenceInDays, parseISO } from 'date-fns'
 import ValueDisplay from '../common/ValueDisplay.vue'
@@ -307,6 +307,37 @@ const getDaysOverdue = (vencimento) => {
 
 .overdue-content {
   min-height: 400px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(26, 54, 93, 0.08);
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  font-size: 2rem;
+  color: white;
+}
+
+.empty-state h3 {
+  color: #1e40af;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #6c757d;
+  margin: 0;
 }
 
 /* Nova Tabela de Atrasados */

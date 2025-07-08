@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container animate-fade-in">
+  <div class="app-container">
     <AppHeader />
     
     <main class="main-content">
@@ -7,21 +7,17 @@
         <!-- Página Inicial Compacta -->
         <div v-if="currentView === 'home'" class="home-page">
           <div class="welcome-section">
-            <BaseCard variant="elevated" class="welcome-card">
+            <div class="welcome-content">
               <div class="welcome-icon">
                 <i class="pi pi-chart-bar"></i>
               </div>
               <h2 class="welcome-title">Sistema Financeiro</h2>
               <p class="welcome-subtitle">Escolha uma opção para começar</p>
-            </BaseCard>
+            </div>
           </div>
           
           <div class="navigation-grid">
-            <BaseCard 
-              class="nav-card cashflow-card animate-scale-in" 
-              hover
-              @click="navigateTo('cashflow')"
-            >
+            <div class="nav-card cashflow-card" @click="navigateTo('cashflow')">
               <div class="nav-card-icon">
                 <i class="pi pi-chart-line"></i>
               </div>
@@ -36,14 +32,9 @@
               <div class="nav-card-arrow">
                 <i class="pi pi-arrow-right"></i>
               </div>
-            </BaseCard>
+            </div>
             
-            <BaseCard 
-              class="nav-card overdue-card animate-scale-in" 
-              hover
-              @click="navigateTo('overdue')"
-              style="animation-delay: 0.1s"
-            >
+            <div class="nav-card overdue-card" @click="navigateTo('overdue')">
               <div class="nav-card-icon">
                 <i class="pi pi-exclamation-triangle"></i>
               </div>
@@ -58,14 +49,9 @@
               <div class="nav-card-arrow">
                 <i class="pi pi-arrow-right"></i>
               </div>
-            </BaseCard>
+            </div>
             
-            <BaseCard 
-              class="nav-card rawdata-card animate-scale-in" 
-              hover
-              @click="navigateTo('rawdata')"
-              style="animation-delay: 0.2s"
-            >
+            <div class="nav-card rawdata-card" @click="navigateTo('rawdata')">
               <div class="nav-card-icon">
                 <i class="pi pi-database"></i>
               </div>
@@ -80,18 +66,18 @@
               <div class="nav-card-arrow">
                 <i class="pi pi-arrow-right"></i>
               </div>
-            </BaseCard>
+            </div>
           </div>
         </div>
         
         <!-- Conteúdo das Abas -->
-        <div v-else class="content-view animate-slide-in">
+        <div v-else class="content-view">
           <div class="view-header">
-            <BaseButton
+            <Button
               @click="goHome"
               icon="pi pi-home"
-              variant="outline"
-              size="sm"
+              label="Início"
+              class="p-button-outlined p-button-sm home-btn"
             />
             <h2 class="current-view-title">{{ currentViewTitle }}</h2>
           </div>
@@ -112,8 +98,6 @@
 <script setup>
 import { ref, computed } from 'vue'
 import AppHeader from './components/layout/AppHeader.vue'
-import BaseCard from './components/ui/BaseCard.vue'
-import BaseButton from './components/ui/BaseButton.vue'
 import FilterPanel from './components/filters/FilterPanel.vue'
 import CashFlowView from './components/views/CashFlowView.vue'
 import OverdueView from './components/views/OverdueView.vue'
@@ -142,42 +126,42 @@ const goHome = () => {
 <style scoped>
 .app-container {
   min-height: 100vh;
-  background: var(--gradient-background);
-  transition: background var(--transition-normal);
+  background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 50%, #ddeeff 100%);
 }
 
 .main-content {
-  padding: var(--spacing-6) 0;
+  padding: 1.5rem 0;
 }
 
 .container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 var(--spacing-4);
+  padding: 0 1rem;
 }
 
 /* Página Inicial Compacta */
 .home-page {
   max-width: 1000px;
   margin: 0 auto;
-  padding: var(--spacing-8) 0;
+  padding: 2rem 0;
 }
 
 .welcome-section {
   text-align: center;
-  margin-bottom: var(--spacing-8);
+  margin-bottom: 2rem;
 }
 
-.welcome-card {
-  background: var(--gradient-primary);
-  color: var(--color-primary-foreground);
-  padding: var(--spacing-8);
+.welcome-content {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(30, 64, 175, 0.3);
   position: relative;
   overflow: hidden;
-  border: none;
 }
 
-.welcome-card::before {
+.welcome-content::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -196,74 +180,86 @@ const goHome = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto var(--spacing-4);
-  font-size: var(--font-size-2xl);
+  margin: 0 auto 1rem;
+  font-size: 1.5rem;
   backdrop-filter: blur(10px);
   border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .welcome-title {
-  font-size: var(--font-size-3xl);
-  font-weight: var(--font-weight-bold);
-  margin-bottom: var(--spacing-2);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .welcome-subtitle {
-  font-size: var(--font-size-base);
+  font-size: 1rem;
   margin: 0;
   opacity: 0.9;
-  font-weight: var(--font-weight-normal);
+  font-weight: 300;
 }
 
 /* Grid de Navegação Compacta */
 .navigation-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--spacing-6);
+  gap: 1.5rem;
   max-width: 1000px;
   margin: 0 auto;
 }
 
 .nav-card {
-  padding: var(--spacing-6);
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
   cursor: pointer;
-  transition: all var(--transition-normal);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
   display: flex;
   align-items: center;
-  gap: var(--spacing-4);
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(30, 64, 175, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 .nav-card-icon {
   width: 50px;
   height: 50px;
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-xl);
-  color: var(--color-primary-foreground);
+  font-size: 1.25rem;
+  color: white;
   flex-shrink: 0;
-  transition: all var(--transition-normal);
+  transition: all 0.3s ease;
 }
 
 .cashflow-card .nav-card-icon {
-  background: var(--gradient-primary);
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
 }
 
 .overdue-card .nav-card-icon {
-  background: var(--gradient-danger);
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
 }
 
 .rawdata-card .nav-card-icon {
-  background: var(--gradient-success);
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, #059669, #10b981);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
 }
 
 .nav-card:hover .nav-card-icon {
-  transform: scale(1.1) rotate(3deg);
+  transform: scale(1.1) rotate(5deg);
 }
 
 .nav-card-content {
@@ -271,71 +267,98 @@ const goHome = () => {
 }
 
 .nav-card-content h3 {
-  font-size: var(--font-size-xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text);
-  margin: 0 0 var(--spacing-2) 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
 }
 
 .nav-card-content p {
-  color: var(--color-text-muted);
-  margin: 0 0 var(--spacing-3) 0;
-  font-size: var(--font-size-sm);
-  line-height: var(--line-height-normal);
+  color: #64748b;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .nav-card-features {
   display: flex;
-  gap: var(--spacing-2);
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .feature-tag {
-  background: var(--color-muted);
-  color: var(--color-text-muted);
-  padding: var(--spacing-1) var(--spacing-3);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
-  border: 1px solid var(--color-border);
-  transition: all var(--transition-normal);
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  color: #475569;
+  padding: 0.2rem 0.6rem;
+  border-radius: 16px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
 }
 
 .nav-card:hover .feature-tag {
-  background: var(--color-accent);
-  color: var(--color-primary);
-  border-color: var(--color-primary);
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1e40af;
+  border-color: #3b82f6;
 }
 
 .nav-card-arrow {
-  font-size: var(--font-size-xl);
-  color: var(--color-primary);
-  transition: all var(--transition-normal);
+  font-size: 1.25rem;
+  color: #3b82f6;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .nav-card:hover .nav-card-arrow {
-  transform: translateX(var(--spacing-2)) scale(1.2);
-  color: var(--color-primary-hover);
+  transform: translateX(6px) scale(1.2);
+  color: #1e40af;
 }
 
 /* Conteúdo das Views */
+.content-view {
+  animation: fadeIn 0.4s ease-out;
+}
+
 .view-header {
   display: flex;
   align-items: center;
-  gap: var(--spacing-4);
-  margin-bottom: var(--spacing-6);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.home-btn {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transition: all 0.3s ease;
+}
+
+.home-btn:hover {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-2px);
 }
 
 .current-view-title {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-primary);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e40af;
   margin: 0;
 }
 
 .view-content {
-  margin-top: var(--spacing-6);
+  margin-top: 1.5rem;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes float {
@@ -350,14 +373,14 @@ const goHome = () => {
 @media (max-width: 768px) {
   .navigation-grid {
     grid-template-columns: 1fr;
-    gap: var(--spacing-4);
+    gap: 1rem;
   }
   
   .nav-card {
-    padding: var(--spacing-5);
+    padding: 1.25rem;
     flex-direction: column;
     text-align: center;
-    gap: var(--spacing-4);
+    gap: 1rem;
   }
   
   .nav-card-content {
@@ -370,11 +393,11 @@ const goHome = () => {
   }
   
   .nav-card:hover .nav-card-arrow {
-    transform: rotate(90deg) translateY(-var(--spacing-2)) scale(1.2);
+    transform: rotate(90deg) translateY(-6px) scale(1.2);
   }
   
   .welcome-title {
-    font-size: var(--font-size-2xl);
+    font-size: 1.75rem;
   }
   
   .view-header {
@@ -383,7 +406,7 @@ const goHome = () => {
   }
   
   .current-view-title {
-    font-size: var(--font-size-xl);
+    font-size: 1.5rem;
   }
 }
 

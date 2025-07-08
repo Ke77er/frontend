@@ -15,7 +15,6 @@
             <i class="pi pi-clock"></i>
             <span>Última atualização: {{ lastUpdate }}</span>
           </div>
-          <ThemeToggle />
         </div>
       </div>
     </div>
@@ -24,7 +23,6 @@
 
 <script setup>
 import { ref } from 'vue'
-import ThemeToggle from '../ui/ThemeToggle.vue'
 
 const lastUpdate = ref('2025-02-28 10:51')
 </script>
@@ -81,7 +79,6 @@ const lastUpdate = ref('2025-02-28 10:51')
 .header-info {
   display: flex;
   align-items: center;
-  gap: var(--spacing-4);
 }
 
 .last-update {
@@ -100,11 +97,6 @@ const lastUpdate = ref('2025-02-28 10:51')
   .header-content {
     text-align: center;
     justify-content: center;
-  }
-  
-  .header-info {
-    flex-direction: column;
-    gap: var(--spacing-2);
   }
   
   .brand-title {
