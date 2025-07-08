@@ -101,7 +101,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useParametros } from '../../composables/useParametros'
 import { useDataService } from '../../composables/useDataService'
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter } from 'date-fns'
+import { getQuickFilterDates } from '../../utils/dateUtils'
+import { QUICK_FILTERS } from '../../config/constants'
 
 const { 
   categoriasSelecionadas, 
@@ -118,12 +119,7 @@ const categorias = ref([])
 const contas = ref([])
 const empresas = ref([])
 
-const quickFilters = [
-  { key: 'hoje', label: 'Hoje' },
-  { key: 'semana', label: 'Semana' },
-  { key: 'mes', label: 'Mês' },
-  { key: 'trimestre', label: 'Trimestre' }
-]
+const quickFilters = QUICK_FILTERS
 
 const activeFiltersCount = computed(() => {
   let count = 0
@@ -138,26 +134,9 @@ const toggleExpanded = () => {
 }
 
 const setQuickFilter = (periodo) => {
-  const hoje = new Date()
-  
-  switch (periodo) {
-    case 'hoje':
-      dataInicio.value = hoje
-      dataFim.value = hoje
-      break
-    case 'semana':
-      dataInicio.value = startOfWeek(hoje, { weekStartsOn: 1 })
-      dataFim.value = endOfWeek(hoje, { weekStartsOn: 1 })
-      break
-    case 'mes':
-      dataInicio.value = startOfMonth(hoje)
-      dataFim.value = endOfMonth(hoje)
-      break
-    case 'trimestre':
-      dataInicio.value = startOfQuarter(hoje)
-      dataFim.value = endOfQuarter(hoje)
-      break
-  }
+  const { inicio, fim } = getQuickFilterDates(periodo)
+  dataInicio.value = inicio
+  dataFim.value = fim
 }
 
 const clearFilters = () => {

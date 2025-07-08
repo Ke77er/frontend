@@ -257,8 +257,8 @@
 import { ref, computed, watch } from 'vue'
 import { useCashFlowData } from '../../composables/useCashFlowData'
 import { useReadonlyParametros } from '../../composables/useParametros'
-import { format, eachDayOfInterval } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { formatDateRange, formatPeriodTitle } from '../../utils/dateUtils'
+import { formatCurrency, getValueClass } from '../../utils/formatUtils'
 import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
 
@@ -327,34 +327,6 @@ const balanceLinePoints = computed(() => {
     return `${x},${y}`
   }).join(' ')
 })
-
-const formatCurrency = (value) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  }).format(value)
-}
-
-const formatDateRange = (inicio, fim) => {
-  if (!inicio || !fim) return ''
-  
-  const formatInicio = format(inicio, 'dd/MM/yyyy', { locale: ptBR })
-  const formatFim = format(fim, 'dd/MM/yyyy', { locale: ptBR })
-  
-  return `${formatInicio} - ${formatFim}`
-}
-
-const formatPeriodTitle = (inicio, fim) => {
-  if (!inicio || !fim) return ''
-  
-  return format(inicio, 'MMMM/yyyy', { locale: ptBR }).toUpperCase()
-}
-
-const getValueClass = (value) => {
-  if (value > 0) return 'positive-value'
-  if (value < 0) return 'negative-value'
-  return 'neutral-value'
-}
 
 const getPeriodHeaderClass = (periodo) => {
   const classes = ['period-header']

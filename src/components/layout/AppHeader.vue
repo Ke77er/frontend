@@ -5,8 +5,8 @@
         <div class="brand">
           <div class="brand-icon"></div>
           <div class="brand-text">
-            <h1 class="brand-title">Codex Finance</h1>
-            <p class="brand-subtitle">Sistema de Gestão Financeira</p>
+            <h1 class="brand-title">{{ name }}</h1>
+            <p class="brand-subtitle">{{ subtitle }}</p>
           </div>
         </div>
         
@@ -23,8 +23,10 @@
 
 <script setup>
 import { ref } from 'vue'
+import { APP_CONFIG } from '../../config/constants'
 
 const lastUpdate = ref('2025-02-28 10:51')
+const { name, subtitle } = APP_CONFIG
 </script>
 
 <style scoped>

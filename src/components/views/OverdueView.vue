@@ -137,16 +137,14 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useOverdueData } from '../../composables/useOverdueData'
-import { differenceInDays, parseISO } from 'date-fns'
+import { getDaysOverdue } from '../../utils/dateUtils'
+import { OVERDUE_TYPES } from '../../config/constants'
 import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
 
 const tipo = ref('Receber')
 
-const tipoOptions = [
-  { label: 'A Receber', value: 'Receber' },
-  { label: 'A Pagar', value: 'Pagar' }
-]
+const tipoOptions = OVERDUE_TYPES
 
 const { getOverdueData } = useOverdueData()
 
@@ -183,15 +181,6 @@ const totalItems = computed(() => {
   return dadosFiltrados.value.length
 })
 
-const getDaysOverdue = (vencimento) => {
-  try {
-    const vencDate = parseISO(vencimento)
-    const today = new Date()
-    return Math.max(0, differenceInDays(today, vencDate))
-  } catch {
-    return 0
-  }
-}
 </script>
 
 <style scoped>

@@ -169,8 +169,9 @@
 import { ref, computed } from 'vue'
 import { useRawData } from '../../composables/useRawData'
 import { useReadonlyParametros } from '../../composables/useParametros'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { formatDate } from '../../utils/dateUtils'
+import { exportToCSV } from '../../utils/formatUtils'
+import { PAGINATION_OPTIONS } from '../../config/constants'
 import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
 
@@ -178,7 +179,7 @@ const globalFilter = ref('')
 const currentPage = ref(1)
 const rowsPerPage = ref(20)
 
-const rowsOptions = [10, 20, 50, 100]
+const rowsOptions = PAGINATION_OPTIONS
 
 const { dataInicio, dataFim } = useReadonlyParametros()
 const { getRawData } = useRawData()
@@ -223,8 +224,8 @@ const paginatedData = computed(() => {
 const formatDateRange = () => {
   if (!dataInicio.value || !dataFim.value) return 'Período não definido'
   
-  const inicio = format(dataInicio.value, 'dd/MM/yyyy', { locale: ptBR })
-  const fim = format(dataFim.value, 'dd/MM/yyyy', { locale: ptBR })
+  const inicio = formatDate(dataInicio.value)
+  const fim = formatDate(dataFim.value)
   
   return `${inicio} - ${fim}`
 }
@@ -242,45 +243,24 @@ const nextPage = () => {
 }
 
 const exportData = () => {
-  try {
-    const headers = [
-      'Data Vencimento',
-      'Data Baixa', 
-      'Valor',
-      'Categoria',
-      'Conta',
-      'Pessoa',
-      'Observações'
-    ]
-    
-    const csvContent = [
-      headers.join(','),
-      ...dadosFiltrados.value.map(item => [
-        item.data_vencimento,
-        item.data_baixa || '',
-        item.valor_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-        `"${item.categoria}"`,
-        `"${item.conta}"`,
-        `"${item.pessoa}"`,
-        `"${item.observacoes || ''}"`
-      ].join(','))
-    ].join('\n')
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const link = document.createElement('a')
-    const url = URL.createObjectURL(blob)
-    
-    link.setAttribute('href', url)
-    link.setAttribute('download', `dados-financeiros-${format(new Date(), 'yyyy-MM-dd')}.csv`)
-    link.style.visibility = 'hidden'
-    
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
+  const headers = [
+    'Data Vencimento',
+    'Data Baixa', 
+    'Valor',
+    'Categoria',
+    'Conta',
+    'Pessoa',
+    'Observações'
+  ]
+  
+  const filename = `dados-financeiros-${formatDate(new Date(), 'yyyy-MM-dd')}.csv`
+  
+  const success = exportToCSV(dadosFiltrados.value, filename, headers)
+  
+  if (success) {
     console.log('Dados exportados com sucesso!')
-  } catch (error) {
-    console.error('Erro ao exportar dados:', error)
+  } else {
+    console.error('Erro ao exportar dados')
   }
 }
 
