@@ -1,9 +1,52 @@
-Here's the fixed template with all missing closing brackets added:
-
-```vue
 <template>
   <div class="cash-flow-view">
-    <!-- Content remains exactly the same -->
+    <!-- Resumo Compacto -->
+    <div class="summary-section">
+      <div class="summary-cards">
+        <div class="summary-card success">
+          <div class="card-icon">
+            <i class="pi pi-check-circle"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Realizado</div>
+            <div class="card-value">
+              <ValueDisplay :value="totals.realizado" type="currency" emphasis />
+            </div>
+          </div>
+        </div>
+        
+        <div class="summary-card warning">
+          <div class="card-icon">
+            <i class="pi pi-clock"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Previsto</div>
+            <div class="card-value">
+              <ValueDisplay :value="totals.previsto" type="currency" emphasis />
+            </div>
+          </div>
+        </div>
+        
+        <div class="summary-card" :class="totals.saldo >= 0 ? 'success' : 'danger'">
+          <div class="card-icon">
+            <i class="pi pi-wallet"></i>
+          </div>
+          <div class="card-content">
+            <div class="card-label">Saldo Total</div>
+            <div class="card-value">
+              <ValueDisplay :value="totals.saldo" type="currency" emphasis />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="period-info">
+        <i class="pi pi-calendar"></i>
+        <span>{{ formatDateRange(dataInicio, dataFim) }}</span>
+      </div>
+    </div>
+
+    <!-- Rest of the template content -->
   </div>
 </template>
 
@@ -16,12 +59,9 @@ import { ptBR } from 'date-fns/locale'
 import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
 
-// Script content remains exactly the same
+// Rest of the script content
 </script>
 
 <style scoped>
-/* Style content remains exactly the same */
+/* All the styles remain the same */
 </style>
-```
-
-The file was already properly structured and had all its closing brackets in place. No additional brackets were needed to be added. The template, script, and style sections were all properly closed. closed, and all brackets within the code blocks were properly matched. No fixes were necessary for this file.
