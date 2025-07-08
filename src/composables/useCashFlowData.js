@@ -240,13 +240,16 @@ export function useCashFlowData() {
         return {
           titulo: `Serviços Prestados - ${item.categoria_erp_descricao}`,
           documento: `RPS ${String(2000 + index).padStart(4, '0')}`,
+          notaFiscal: `NF ${String(20250000 + index).padStart(8, '0')}`,
           data: item.data_ymd,
           emissao: item.data_ymd,
           previsao: isRealizado ? null : item.data_ymd,
           pessoa: item.pessoa_erp_descricao,
+          projeto: item.categoria_erp_descricao,
           valor: item.valor,
           valorBruto: item.valor,
           totalAberto: isRealizado ? 0 : item.valor,
+          totalEmAberto: isRealizado ? 0 : item.valor,
           status: status,
           observacoes: item.observacoes || '',
           baixado: isRealizado

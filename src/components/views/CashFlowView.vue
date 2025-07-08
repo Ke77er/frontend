@@ -119,77 +119,69 @@
       </div>
     </div>
 
-    <!-- Tabela de Fluxo -->
+    <!-- Tabela de Fluxo Estilo Novo -->
     <div class="table-container">
       <div class="table-header">
         <h3 class="table-title">FLUXO DE CAIXA - {{ formatPeriodTitle(dataInicio, dataFim) }}</h3>
       </div>
       
-      <DataTable
-        :value="linhas"
-        class="cash-flow-table"
-        :paginator="false"
-        responsiveLayout="scroll"
-        showGridlines
-        :loading="loading"
-        :scrollable="true"
-        scrollHeight="600px"
-        size="small"
-      >
-        <Column field="categoria" header="Categoria" :frozen="true" style="min-width: 200px; background: #f8f9fa;">
-          <template #body="{ data }">
-            <div class="category-cell">
-              <span class="category-name">{{ data.categoria }}</span>
-            </div>
-          </template>
-        </Column>
-        
-        <Column 
-          v-for="periodo in periodos" 
-          :key="periodo.key"
-          :field="periodo.key"
-          :header="periodo.label"
-          style="min-width: 80px; text-align: center;"
-          :class="getPeriodColumnClass(periodo)"
-        >
-          <template #header>
-            <div class="period-header">
-              <div class="period-date">{{ periodo.shortLabel || periodo.label }}</div>
-              <div v-if="periodo.typeLabel" class="period-type">{{ periodo.typeLabel }}</div>
-            </div>
-          </template>
-          <template #body="{ data }">
-            <div 
-              class="value-cell" 
-              @click="showDetails(data.categoria, periodo, data[periodo.key])"
-              :class="{ 'clickable-value': data[periodo.key] !== 0 }"
-            >
-              <ValueDisplay 
-                :value="data[periodo.key] || 0" 
-                type="currency" 
-                :class="getValueClass(data[periodo.key] || 0)"
-              />
-            </div>
-          </template>
-        </Column>
-        
-        <!-- Coluna Total -->
-        <Column field="total" header="Total" style="min-width: 100px; background: #e3f2fd;" :frozen="true" frozenPosition="right">
-          <template #body="{ data }">
-            <div class="total-cell">
-              <ValueDisplay :value="data.total" type="currency" emphasis :class="getValueClass(data.total)" />
-            </div>
-          </template>
-        </Column>
-      </DataTable>
+      <div class="table-wrapper">
+        <table class="cash-flow-table-new">
+          <thead>
+            <tr>
+              <th class="category-header">Categoria</th>
+              <th 
+                v-for="periodo in periodos" 
+                :key="periodo.key"
+                :class="getPeriodHeaderClass(periodo)"
+                class="period-header-cell"
+              >
+                <div class="period-header-content">
+                  <div class="period-date">{{ periodo.shortLabel || periodo.label }}</div>
+                  <div v-if="periodo.typeLabel" class="period-type">{{ periodo.typeLabel }}</div>
+                </div>
+              </th>
+              <th class="total-header">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="linha in linhas" :key="linha.categoria" class="data-row">
+              <td class="category-cell">
+                <span class="category-name">{{ linha.categoria }}</span>
+              </td>
+              <td 
+                v-for="periodo in periodos" 
+                :key="periodo.key"
+                :class="getPeriodCellClass(periodo, linha[periodo.key])"
+                class="value-cell"
+                @click="showDetails(linha.categoria, periodo, linha[periodo.key])"
+              >
+                <ValueDisplay 
+                  :value="linha[periodo.key] || 0" 
+                  type="currency" 
+                  :class="getValueClass(linha[periodo.key] || 0)"
+                />
+              </td>
+              <td class="total-cell">
+                <ValueDisplay 
+                  :value="linha.total" 
+                  type="currency" 
+                  emphasis 
+                  :class="getValueClass(linha.total)" 
+                />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Dialog de Detalhes -->
+    <!-- Dialog de Detalhes Melhorado -->
     <Dialog 
       v-model:visible="showDetailsDialog" 
       :header="detailsTitle"
       :modal="true"
-      :style="{ width: '1200px' }"
+      :style="{ width: '95vw', maxWidth: '1400px' }"
       class="details-dialog"
     >
       <div class="details-content">
@@ -210,65 +202,52 @@
           </div>
         </div>
 
-        <DataTable 
-          :value="selectedDetails.items" 
-          class="details-table"
-          :paginator="true"
-          :rows="15"
-          stripedRows
-          showGridlines
-          size="small"
-        >
-          <Column field="titulo" header="Título" style="min-width: 200px">
-            <template #body="{ data }">
-              <span class="detail-titulo">{{ data.titulo }}</span>
-            </template>
-          </Column>
-          <Column field="documento" header="Documento" style="min-width: 100px">
-            <template #body="{ data }">
-              <span class="detail-documento">{{ data.documento }}</span>
-            </template>
-          </Column>
-          <Column field="pessoa" header="Cliente / Fornecedor" style="min-width: 200px">
-            <template #body="{ data }">
-              <span class="detail-pessoa">{{ data.pessoa }}</span>
-            </template>
-          </Column>
-          <Column field="emissao" header="Emissão" style="min-width: 90px">
-            <template #body="{ data }">
-              <DateDisplay :date="data.emissao" />
-            </template>
-          </Column>
-          <Column field="data" header="Vencimento" style="min-width: 90px">
-            <template #body="{ data }">
-              <DateDisplay :date="data.data" />
-            </template>
-          </Column>
-          <Column field="previsao" header="Previsão" style="min-width: 90px">
-            <template #body="{ data }">
-              <DateDisplay :date="data.previsao" allowEmpty />
-            </template>
-          </Column>
-          <Column field="valor" header="Valor Bruto" style="min-width: 110px">
-            <template #body="{ data }">
-              <ValueDisplay :value="data.valorBruto || data.valor" type="currency" :class="getValueClass(data.valorBruto || data.valor)" />
-            </template>
-          </Column>
-          <Column field="totalAberto" header="Total em Aberto" style="min-width: 120px">
-            <template #body="{ data }">
-              <ValueDisplay :value="data.totalAberto || data.valor" type="currency" :class="getValueClass(data.totalAberto || data.valor)" />
-            </template>
-          </Column>
-          <Column field="status" header="Status" style="min-width: 100px">
-            <template #body="{ data }">
-              <Tag 
-                :value="data.status" 
-                :severity="getStatusSeverity(data.status)"
-                class="status-tag"
-              />
-            </template>
-          </Column>
-        </DataTable>
+        <div class="details-table-wrapper">
+          <table class="details-table-new">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Documento</th>
+                <th>Nota Fiscal</th>
+                <th>Cliente / Fornecedor</th>
+                <th>Projeto</th>
+                <th>Emissão</th>
+                <th>Vencimento</th>
+                <th>Previsão</th>
+                <th>Valor Bruto</th>
+                <th>Total Aberto</th>
+                <th>Total em Aberto</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in selectedDetails.items" :key="index">
+                <td class="detail-titulo">{{ item.titulo }}</td>
+                <td class="detail-documento">{{ item.documento }}</td>
+                <td class="detail-nota">{{ item.notaFiscal || '-' }}</td>
+                <td class="detail-pessoa">{{ item.pessoa }}</td>
+                <td class="detail-projeto">{{ item.projeto || '-' }}</td>
+                <td class="detail-date">
+                  <DateDisplay :date="item.emissao" />
+                </td>
+                <td class="detail-date">
+                  <DateDisplay :date="item.data" />
+                </td>
+                <td class="detail-date">
+                  <DateDisplay :date="item.previsao" allowEmpty />
+                </td>
+                <td class="detail-value">
+                  <ValueDisplay :value="item.valorBruto || item.valor" type="currency" :class="getValueClass(item.valorBruto || item.valor)" />
+                </td>
+                <td class="detail-value">
+                  <ValueDisplay :value="item.totalAberto || 0" type="currency" :class="getValueClass(item.totalAberto || 0)" />
+                </td>
+                <td class="detail-value">
+                  <ValueDisplay :value="item.totalEmAberto || item.totalAberto || 0" type="currency" :class="getValueClass(item.totalEmAberto || item.totalAberto || 0)" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </Dialog>
   </div>
@@ -377,20 +356,20 @@ const getValueClass = (value) => {
   return 'neutral-value'
 }
 
-const getStatusSeverity = (status) => {
-  switch (status) {
-    case 'Realizado': return 'success'
-    case 'Vencido': return 'danger'
-    case 'Previsto': return 'warning'
-    default: return 'info'
-  }
+const getPeriodHeaderClass = (periodo) => {
+  const classes = ['period-header']
+  if (periodo.type === 'realizado') classes.push('realizado-header')
+  if (periodo.type === 'previsto') classes.push('previsto-header')
+  if (periodo.isCurrentMonth || periodo.isCurrentDay) classes.push('current-period-header')
+  return classes.join(' ')
 }
 
-const getPeriodColumnClass = (periodo) => {
-  const classes = ['period-column']
-  if (periodo.type === 'realizado') classes.push('realizado-column')
-  if (periodo.type === 'previsto') classes.push('previsto-column')
-  if (periodo.isCurrentMonth || periodo.isCurrentDay) classes.push('current-period-column')
+const getPeriodCellClass = (periodo, valor) => {
+  const classes = ['period-cell']
+  if (periodo.type === 'realizado') classes.push('realizado-cell')
+  if (periodo.type === 'previsto') classes.push('previsto-cell')
+  if (periodo.isCurrentMonth || periodo.isCurrentDay) classes.push('current-period-cell')
+  if (valor !== 0) classes.push('clickable-value')
   return classes.join(' ')
 }
 
@@ -665,6 +644,7 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   margin-top: 0.5rem;
 }
 
+/* Nova Tabela de Fluxo */
 .table-container {
   background: white;
   border-radius: 8px;
@@ -688,49 +668,71 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   letter-spacing: 0.5px;
 }
 
-.cash-flow-table :deep(.p-datatable-thead > tr > th) {
-  background: #e9ecef;
-  color: #495057;
-  font-weight: 600;
-  border: 1px solid #dee2e6;
-  padding: 0.5rem;
+.table-wrapper {
+  overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.cash-flow-table-new {
+  width: 100%;
+  border-collapse: collapse;
   font-size: 0.75rem;
+}
+
+.cash-flow-table-new th,
+.cash-flow-table-new td {
+  padding: 0.5rem;
+  border: 1px solid #dee2e6;
   text-align: center;
   vertical-align: middle;
 }
 
-.cash-flow-table :deep(.realizado-column th) {
-  background: #d4edda;
-  color: #155724;
-}
-
-.cash-flow-table :deep(.previsto-column th) {
-  background: #fff3cd;
-  color: #856404;
-}
-
-.cash-flow-table :deep(.current-period-column th) {
-  background: #cce5ff;
-  color: #004085;
-  font-weight: 700;
-}
-
-.cash-flow-table :deep(.p-datatable-tbody > tr > td) {
-  padding: 0.4rem;
-  border: 1px solid #dee2e6;
-  font-size: 0.75rem;
-  vertical-align: middle;
-}
-
-.cash-flow-table :deep(.p-datatable-tbody > tr:nth-child(even)) {
+.category-header {
   background: #f8f9fa;
+  color: #495057;
+  font-weight: 600;
+  text-align: left;
+  position: sticky;
+  left: 0;
+  z-index: 10;
+  min-width: 200px;
 }
 
-.cash-flow-table :deep(.p-datatable-tbody > tr:hover) {
+.period-header-cell {
+  background: #e9ecef;
+  color: #495057;
+  font-weight: 600;
+  min-width: 80px;
+}
+
+.realizado-header {
+  background: #d4edda !important;
+  color: #155724 !important;
+}
+
+.previsto-header {
+  background: #fff3cd !important;
+  color: #856404 !important;
+}
+
+.current-period-header {
+  background: #cce5ff !important;
+  color: #004085 !important;
+  font-weight: 700 !important;
+}
+
+.total-header {
   background: #e3f2fd;
+  color: #1565c0;
+  font-weight: 700;
+  position: sticky;
+  right: 0;
+  z-index: 10;
+  min-width: 100px;
 }
 
-.period-header {
+.period-header-content {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -748,32 +750,30 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   font-weight: 400;
 }
 
+.data-row:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.data-row:hover {
+  background: #e3f2fd;
+}
+
 .category-cell {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  background: #f8f9fa;
+  text-align: left;
+  font-weight: 500;
+  color: #495057;
+  position: sticky;
+  left: 0;
+  z-index: 5;
 }
 
 .category-name {
-  font-weight: 500;
-  color: #495057;
   font-size: 0.75rem;
-  flex: 1;
-}
-
-.total-cell {
-  text-align: center;
-  font-weight: 700;
-  background: rgba(227, 242, 253, 0.5);
-  padding: 0.25rem;
-  border-radius: 3px;
 }
 
 .value-cell {
-  text-align: center;
   cursor: default;
-  padding: 0.25rem;
-  border-radius: 3px;
   transition: all 0.2s ease;
 }
 
@@ -782,9 +782,29 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 }
 
 .clickable-value:hover {
-  background: #007bff;
-  color: white;
+  background: #007bff !important;
+  color: white !important;
   transform: scale(1.05);
+}
+
+.realizado-cell {
+  background: rgba(212, 237, 218, 0.3);
+}
+
+.previsto-cell {
+  background: rgba(255, 243, 205, 0.3);
+}
+
+.current-period-cell {
+  background: rgba(204, 229, 255, 0.3);
+}
+
+.total-cell {
+  background: rgba(227, 242, 253, 0.8);
+  font-weight: 700;
+  position: sticky;
+  right: 0;
+  z-index: 5;
 }
 
 .positive-value {
@@ -801,6 +821,7 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   color: #6c757d !important;
 }
 
+/* Dialog de Detalhes */
 .details-dialog :deep(.p-dialog-header) {
   background: #4a90e2;
   color: white;
@@ -872,39 +893,59 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   color: #495057;
 }
 
-.details-table {
-  border: none;
+.details-table-wrapper {
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
-.details-table :deep(.p-datatable-thead > tr > th) {
+.details-table-new {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.details-table-new th,
+.details-table-new td {
+  padding: 0.75rem;
+  border: 1px solid #dee2e6;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.details-table-new th {
   background: #e9ecef;
   color: #495057;
   font-weight: 600;
-  border: 1px solid #dee2e6;
-  padding: 0.75rem;
-  font-size: 0.75rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.details-table :deep(.p-datatable-tbody > tr > td) {
-  padding: 0.75rem;
-  border: 1px solid #dee2e6;
-  font-size: 0.75rem;
-}
-
-.details-table :deep(.p-datatable-tbody > tr:nth-child(even)) {
+.details-table-new tbody tr:nth-child(even) {
   background: #f8f9fa;
+}
+
+.details-table-new tbody tr:hover {
+  background: #e3f2fd;
 }
 
 .detail-titulo,
 .detail-documento,
-.detail-pessoa {
+.detail-nota,
+.detail-pessoa,
+.detail-projeto {
   font-size: 0.75rem;
   color: #495057;
 }
 
-.status-tag {
-  font-size: 0.65rem;
-  padding: 0.25rem 0.5rem;
+.detail-date {
+  text-align: center;
+}
+
+.detail-value {
+  text-align: right;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
@@ -929,8 +970,8 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
     justify-content: space-around;
   }
   
-  .cash-flow-table :deep(.p-datatable-thead > tr > th),
-  .cash-flow-table :deep(.p-datatable-tbody > tr > td) {
+  .cash-flow-table-new th,
+  .cash-flow-table-new td {
     padding: 0.25rem;
     font-size: 0.7rem;
   }

@@ -4,7 +4,7 @@
     
     <main class="main-content">
       <div class="container">
-        <!-- Página Inicial -->
+        <!-- Página Inicial Compacta -->
         <div v-if="currentView === 'home'" class="home-page">
           <div class="welcome-section">
             <div class="welcome-content">
@@ -16,20 +16,17 @@
             </div>
           </div>
           
-          <div class="navigation-cards">
+          <div class="navigation-grid">
             <div class="nav-card cashflow-card" @click="navigateTo('cashflow')">
-              <div class="nav-card-background"></div>
+              <div class="nav-card-icon">
+                <i class="pi pi-chart-line"></i>
+              </div>
               <div class="nav-card-content">
-                <div class="nav-card-icon">
-                  <i class="pi pi-chart-line"></i>
-                </div>
-                <div class="nav-card-info">
-                  <h3>Fluxo de Caixa</h3>
-                  <p>Entradas e saídas por período</p>
-                  <div class="nav-card-features">
-                    <span class="feature-tag">Histórico Visual</span>
-                    <span class="feature-tag">Detalhamento</span>
-                  </div>
+                <h3>Fluxo de Caixa</h3>
+                <p>Entradas e saídas por período</p>
+                <div class="nav-card-features">
+                  <span class="feature-tag">Histórico Visual</span>
+                  <span class="feature-tag">Detalhamento</span>
                 </div>
               </div>
               <div class="nav-card-arrow">
@@ -38,18 +35,15 @@
             </div>
             
             <div class="nav-card overdue-card" @click="navigateTo('overdue')">
-              <div class="nav-card-background"></div>
+              <div class="nav-card-icon">
+                <i class="pi pi-exclamation-triangle"></i>
+              </div>
               <div class="nav-card-content">
-                <div class="nav-card-icon">
-                  <i class="pi pi-exclamation-triangle"></i>
-                </div>
-                <div class="nav-card-info">
-                  <h3>Atrasados</h3>
-                  <p>Contas em atraso por categoria</p>
-                  <div class="nav-card-features">
-                    <span class="feature-tag">Por Categoria</span>
-                    <span class="feature-tag">Alertas</span>
-                  </div>
+                <h3>Atrasados</h3>
+                <p>Contas em atraso por categoria</p>
+                <div class="nav-card-features">
+                  <span class="feature-tag">Por Categoria</span>
+                  <span class="feature-tag">Alertas</span>
                 </div>
               </div>
               <div class="nav-card-arrow">
@@ -58,18 +52,15 @@
             </div>
             
             <div class="nav-card rawdata-card" @click="navigateTo('rawdata')">
-              <div class="nav-card-background"></div>
+              <div class="nav-card-icon">
+                <i class="pi pi-database"></i>
+              </div>
               <div class="nav-card-content">
-                <div class="nav-card-icon">
-                  <i class="pi pi-database"></i>
-                </div>
-                <div class="nav-card-info">
-                  <h3>Dados Brutos</h3>
-                  <p>Visualização completa dos registros</p>
-                  <div class="nav-card-features">
-                    <span class="feature-tag">Exportação</span>
-                    <span class="feature-tag">Filtros</span>
-                  </div>
+                <h3>Dados Brutos</h3>
+                <p>Visualização completa dos registros</p>
+                <div class="nav-card-features">
+                  <span class="feature-tag">Exportação</span>
+                  <span class="feature-tag">Filtros</span>
                 </div>
               </div>
               <div class="nav-card-arrow">
@@ -148,25 +139,24 @@ const goHome = () => {
   padding: 0 1rem;
 }
 
-/* Página Inicial Redesenhada */
+/* Página Inicial Compacta */
 .home-page {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 2rem 0;
 }
 
 .welcome-section {
   text-align: center;
-  margin-bottom: 3rem;
-  position: relative;
+  margin-bottom: 2rem;
 }
 
 .welcome-content {
   background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
   color: white;
-  padding: 3rem 2rem;
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(30, 64, 175, 0.3);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(30, 64, 175, 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -183,143 +173,111 @@ const goHome = () => {
 }
 
 .welcome-icon {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 1.5rem;
-  font-size: 2rem;
+  margin: 0 auto 1rem;
+  font-size: 1.5rem;
   backdrop-filter: blur(10px);
   border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .welcome-title {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .welcome-subtitle {
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin: 0;
   opacity: 0.9;
   font-weight: 300;
 }
 
-.navigation-cards {
+/* Grid de Navegação Compacta */
+.navigation-grid {
   display: grid;
-  gap: 2rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .nav-card {
   background: white;
-  border-radius: 16px;
-  padding: 0;
-  box-shadow: 0 8px 32px rgba(30, 64, 175, 0.12);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   position: relative;
   overflow: hidden;
-  min-height: 140px;
-}
-
-.nav-card-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-}
-
-.cashflow-card .nav-card-background {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-}
-
-.overdue-card .nav-card-background {
-  background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
-}
-
-.rawdata-card .nav-card-background {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
 }
 
 .nav-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(30, 64, 175, 0.25);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 12px 40px rgba(30, 64, 175, 0.2);
   border-color: rgba(59, 130, 246, 0.3);
 }
 
-.nav-card:hover .nav-card-background {
-  opacity: 0.05;
-}
-
-.nav-card-content {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  padding: 2rem;
-  position: relative;
-  z-index: 2;
-}
-
 .nav-card-icon {
-  width: 70px;
-  height: 70px;
-  border-radius: 16px;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   color: white;
   flex-shrink: 0;
-  position: relative;
-  transition: all 0.4s ease;
+  transition: all 0.3s ease;
 }
 
 .cashflow-card .nav-card-icon {
   background: linear-gradient(135deg, #1e40af, #3b82f6);
-  box-shadow: 0 8px 24px rgba(30, 64, 175, 0.4);
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
 }
 
 .overdue-card .nav-card-icon {
   background: linear-gradient(135deg, #dc2626, #ef4444);
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
 }
 
 .rawdata-card .nav-card-icon {
   background: linear-gradient(135deg, #059669, #10b981);
-  box-shadow: 0 8px 24px rgba(5, 150, 105, 0.4);
+  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
 }
 
 .nav-card:hover .nav-card-icon {
   transform: scale(1.1) rotate(5deg);
 }
 
-.nav-card-info {
+.nav-card-content {
   flex: 1;
 }
 
-.nav-card-info h3 {
-  font-size: 1.4rem;
+.nav-card-content h3 {
+  font-size: 1.25rem;
   font-weight: 700;
   color: #1e293b;
   margin: 0 0 0.5rem 0;
-  transition: color 0.3s ease;
 }
 
-.nav-card-info p {
+.nav-card-content p {
   color: #64748b;
-  margin: 0 0 1rem 0;
-  font-size: 0.95rem;
-  line-height: 1.5;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .nav-card-features {
@@ -331,9 +289,9 @@ const goHome = () => {
 .feature-tag {
   background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
   color: #475569;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 16px;
+  font-size: 0.7rem;
   font-weight: 500;
   border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
@@ -346,14 +304,14 @@ const goHome = () => {
 }
 
 .nav-card-arrow {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   color: #3b82f6;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
 }
 
 .nav-card:hover .nav-card-arrow {
-  transform: translateX(8px) scale(1.2);
+  transform: translateX(6px) scale(1.2);
   color: #1e40af;
 }
 
@@ -413,23 +371,33 @@ const goHome = () => {
 }
 
 @media (max-width: 768px) {
-  .welcome-title {
-    font-size: 2rem;
+  .navigation-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .nav-card {
+    padding: 1.25rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
   }
   
   .nav-card-content {
-    padding: 1.5rem;
-    gap: 1.25rem;
+    order: 2;
   }
   
-  .nav-card-icon {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
+  .nav-card-arrow {
+    order: 3;
+    transform: rotate(90deg);
   }
   
-  .nav-card-info h3 {
-    font-size: 1.2rem;
+  .nav-card:hover .nav-card-arrow {
+    transform: rotate(90deg) translateY(-6px) scale(1.2);
+  }
+  
+  .welcome-title {
+    font-size: 1.75rem;
   }
   
   .view-header {
@@ -439,6 +407,12 @@ const goHome = () => {
   
   .current-view-title {
     font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 1200px) {
+  .navigation-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 </style>
