@@ -11,8 +11,9 @@ const dataLoadingStatus = ref({
 
 // URLs para Google Drive (substitua pelos IDs reais dos seus arquivos)
 const googleDriveUrls = {
-  'malta_advocacia': 'https://drive.google.com/uc?export=download&id=1abc123',
-  'codex_empreendedorismo': 'https://drive.google.com/uc?export=download&id=1def456'
+  'malta_advocacia': 'https://drive.google.com/uc?export=download&id=SEU_ID_MALTA',
+  'codex_empreendedorismo': 'https://drive.google.com/uc?export=download&id=SEU_ID_CODEX',
+  'fluxo': 'https://drive.google.com/uc?export=download&id=SEU_ID_FLUXO'
 }
 
 // URLs da API
@@ -146,8 +147,7 @@ export function useDataService() {
   const getAvailableCompanies = () => {
     const companies = []
     
-    if (empresasData['malta_advocacia']) {
-      companies.push({ label: 'Malta Advocacia', value: 'malta_advocacia' })
+      { label: 'Codex Empreendedorismo', value: 'codex_empreendedorismo' }
     }
     
     if (empresasData['codex_empreendedorismo']) {
