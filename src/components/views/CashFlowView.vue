@@ -1,5 +1,7 @@
 <template>
   <div class="cash-flow-view">
+    <LoadingSpinner v-if="loading" overlay text="Carregando dados..." />
+    
     <!-- Resumo Compacto -->
     <div class="summary-section">
       <div class="summary-cards">
@@ -255,6 +257,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import LoadingSpinner from '../ui/LoadingSpinner.vue'
 import { useCashFlowData } from '../../composables/useCashFlowData'
 import { useReadonlyParametros } from '../../composables/useParametros'
 import { format, eachDayOfInterval } from 'date-fns'
