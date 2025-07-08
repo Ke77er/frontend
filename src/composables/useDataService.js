@@ -147,7 +147,8 @@ export function useDataService() {
   const getAvailableCompanies = () => {
     const companies = []
     
-      { label: 'Codex Empreendedorismo', value: 'codex_empreendedorismo' }
+    if (empresasData['malta_advocacia']) {
+      companies.push({ label: 'Malta Advocacia', value: 'malta_advocacia' })
     }
     
     if (empresasData['codex_empreendedorismo']) {
