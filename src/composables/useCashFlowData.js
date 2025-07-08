@@ -208,12 +208,29 @@ export function useCashFlowData() {
         }
       } else {
         // Outros períodos
-        if (periodo.key.includes('-')) {
+        // Verificar se é período mensal ou diário baseado no formato da chave
+        const isMonthlyPeriod = /^\d{4}-\d{2}$/.test(periodo.key) // formato YYYY-MM
+        const isDailyPeriod = /^\d{4}-\d{2}-\d{2}$/.test(periodo.key) // formato YYYY-MM-DD
+        
+        if (isDailyPeriod) {
           // Período diário
           return isSameDay(dataItem, periodo.date)
-        } else {
+        } else if (isMonthlyPeriod) {
           // Período mensal
-          return isSameMonth(dataItem, periodo.date)
+          const pertenceAoPeriodo = isSameMonth(dataItem, periodo.date)
+          
+          // Para períodos futuros (previstos), mostrar apenas itens não baixados
+          // Para períodos passados (realizados), mostrar apenas itens baixados
+          if (periodo.type === 'previsto') {
+            const isRealizado = item.baixado === true || item.baixado === 1
+            return pertenceAoPeriodo && !isRealizado
+          } else if (periodo.type === 'realizado') {
+            const isRealizado = item.baixado === true || item.baixado === 1
+            return pertenceAoPeriodo && isRealizado
+          } else {
+            // Fallback para períodos sem tipo específico
+            return pertenceAoPeriodo
+          }
         }
       }
       
@@ -221,6 +238,12 @@ export function useCashFlowData() {
     })
     
     console.log('Itens encontrados para detalhes:', detailsData.length)
+    console.log('Dados filtrados:', detailsData.map(item => ({
+      categoria: `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`,
+      data: item.data_ymd,
+      valor: item.valor,
+      baixado: item.baixado
+    })))
     
     const resultado = detailsData
       .map((item, index) => {
@@ -264,7 +287,7 @@ export function useCashFlowData() {
         return new Date(a.data) - new Date(b.data)
       })
     
-    console.log('Resultado final dos detalhes:', resultado)
+    console.log('Resultado final dos detalhes:', resultado.length, 'itens processados')
     
     return resultado
   }
