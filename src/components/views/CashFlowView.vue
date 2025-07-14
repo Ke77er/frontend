@@ -149,9 +149,16 @@
               <td class="category-cell">
                 <span 
                   class="category-name" 
-                  :class="{ 'saldo-inicial': linha.isSaldoInicial }"
+                  :class="{ 
+                    'saldo-inicial': linha.isSaldoInicial,
+                    'total-saldo': linha.isTotalSaldo
+                  }"
                 >
-                  {{ linha.isSaldoInicial ? `💰 ${linha.categoria}` : linha.categoria }}
+                  {{ 
+                    linha.isTotalSaldo ? `📊 ${linha.categoria}` :
+                    linha.isSaldoInicial ? `💰 ${linha.categoria}` : 
+                    linha.categoria 
+                  }}
                 </span>
               </td>
               <td 
@@ -166,7 +173,10 @@
                   type="currency" 
                   :class="[
                     getValueClass(linha[periodo.key] || 0),
-                    { 'saldo-inicial-value': linha.isSaldoInicial }
+                    { 
+                      'saldo-inicial-value': linha.isSaldoInicial,
+                      'total-saldo': linha.isTotalSaldo
+                    }
                   ]"
                 />
               </td>
@@ -817,6 +827,17 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   border-left: 3px solid #2563eb;
 }
 
+.saldo-inicial.total-saldo {
+  background: linear-gradient(135deg, #1e40af, #3b82f6) !important;
+  color: white !important;
+  border-left: 4px solid #1e40af !important;
+  font-weight: 800 !important;
+  font-size: 0.85rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+}
+
 .saldo-inicial-value {
   font-weight: 700 !important;
   color: #2563eb !important;
@@ -826,6 +847,13 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
+.saldo-inicial-value.total-saldo {
+  background: rgba(30, 64, 175, 0.2) !important;
+  color: #1e40af !important;
+  border: 2px solid rgba(30, 64, 175, 0.4) !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 6px rgba(30, 64, 175, 0.2);
+}
 .saldo-inicial-total {
   color: #6c757d;
   font-style: italic;

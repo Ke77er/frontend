@@ -111,12 +111,26 @@ export class DataProcessor {
       return dataItem < new Date(dataInicio)
     })
     
+    // Descobrir TODAS as contas que existem nos dados (incluindo do período atual)
+    const todasAsContas = new Set()
+    
+    // Adicionar contas dos dados anteriores
+    dadosAnteriores.forEach(item => {
+      const conta = item.conta_financeira_erp_descricao || 'Conta não informada'
+      todasAsContas.add(conta)
+    })
+    
+    // Adicionar contas dos dados do período atual (para garantir que apareçam mesmo sem saldo inicial)
+    filteredData.forEach(item => {
+      const conta = item.conta_financeira_erp_descricao || 'Conta não informada'
+      todasAsContas.add(conta)
+    })
+    
     // Agrupar por conta financeira
     const contasMap = new Map()
     
-    // Inicializar todas as contas com saldo zero
-    filteredData.forEach(item => {
-      const conta = item.conta_financeira_erp_descricao || 'Conta não informada'
+    // Inicializar TODAS as contas encontradas com saldo zero
+    todasAsContas.forEach(conta => {
       if (!contasMap.has(conta)) {
         contasMap.set(conta, {
           categoria: conta,
@@ -137,6 +151,7 @@ export class DataProcessor {
     
     // Para cada conta, calcular o saldo acumulado por período
     const linhasSaldoInicial = []
+    const totaisPorPeriodo = {}
     
     contasMap.forEach((contaData, conta) => {
       const linhaConta = { ...contaData }
@@ -154,13 +169,36 @@ export class DataProcessor {
         saldoAcumulado += valorPeriodo
         
         linhaConta[periodo.key] = saldoAcumulado
+        
+        // Acumular para o total geral
+        if (!totaisPorPeriodo[periodo.key]) {
+          totaisPorPeriodo[periodo.key] = 0
+        }
+        totaisPorPeriodo[periodo.key] += saldoAcumulado
       })
       
       linhasSaldoInicial.push(linhaConta)
     })
     
+    // Criar linha de TOTAL
+    const linhaTotalSaldo = {
+      categoria: 'TOTAL SALDO INICIAL',
+      total: 0,
+      isSaldoInicial: true,
+      isTotalSaldo: true
+    }
+    
+    periodos.forEach(periodo => {
+      linhaTotalSaldo[periodo.key] = totaisPorPeriodo[periodo.key] || 0
+    })
+    
     // Ordenar por nome da conta
-    return linhasSaldoInicial.sort((a, b) => a.categoria.localeCompare(b.categoria))
+    const linhasOrdenadas = linhasSaldoInicial.sort((a, b) => a.categoria.localeCompare(b.categoria))
+    
+    // Adicionar linha de total no final
+    linhasOrdenadas.push(linhaTotalSaldo)
+    
+    return linhasOrdenadas
   }
 
   itemBelongsToPeriod(item, dataItem, periodo) {
