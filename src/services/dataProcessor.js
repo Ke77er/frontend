@@ -240,12 +240,6 @@ export class DataProcessor {
   }
 
   getDetailsForPeriod(filteredData, categoria, periodo) {
-    // Verificar se é uma conta de saldo inicial
-    if (categoria.startsWith('SALDO INICIAL - ')) {
-      const conta = categoria.replace('SALDO INICIAL - ', '')
-      return this.getDetailsForSaldoInicial(filteredData, conta, periodo)
-    }
-    
     const detailsData = filteredData.filter(item => {
       const itemCategoria = `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`
       if (itemCategoria !== categoria) return false
@@ -291,44 +285,6 @@ export class DataProcessor {
       }
       return new Date(a.data) - new Date(b.data)
     })
-  }
-
-  getDetailsForSaldoInicial(filteredData, conta, periodo) {
-    // Buscar dados anteriores ao período + dados do período atual para esta conta
-    const dadosAnteriores = filteredData.filter(item => {
-      const dataItem = new Date(item.data_ymd)
-      const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
-      return contaItem === conta && dataItem < new Date(periodo.date)
-    })
-    
-    const dadosPeriodo = filteredData.filter(item => {
-      const dataItem = new Date(item.data_ymd)
-      const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
-      return contaItem === conta && this.itemBelongsToPeriod(item, dataItem, periodo)
-    })
-    
-    const todosDados = [...dadosAnteriores, ...dadosPeriodo]
-    
-    // Agrupar por categoria
-    const categorias = new Map()
-    
-    todosDados.forEach(item => {
-      const categoria = `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`
-      if (!categorias.has(categoria)) {
-        categorias.set(categoria, {
-          categoria,
-          valor: 0,
-          itens: 0
-        })
-      }
-      
-      const cat = categorias.get(categoria)
-      cat.valor += item.valor
-      cat.itens += 1
-    })
-    
-    return Array.from(categorias.values())
-      .sort((a, b) => Math.abs(b.valor) - Math.abs(a.valor))
   }
 
   processOverdueData(filteredData, tipo) {
