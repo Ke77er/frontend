@@ -166,7 +166,7 @@
                 :key="periodo.key"
                 :class="getPeriodCellClass(periodo, linha[periodo.key])"
                 class="value-cell"
-                @click="linha.isSaldoInicial ? null : showDetails(linha.categoria, periodo, linha[periodo.key])"
+                @click="showDetails(linha.categoria, periodo, linha[periodo.key])"
               >
                 <ValueDisplay 
                   :value="linha[periodo.key] || 0" 
@@ -223,7 +223,7 @@
         </div>
 
         <div class="details-table-wrapper">
-          <table class="details-table-new">
+          <table class="details-table-new" v-if="!selectedDetails.categoria.startsWith('SALDO INICIAL')">
             <thead>
               <tr>
                 <th>Título</th>
@@ -263,6 +263,35 @@
                 </td>
                 <td class="detail-value">
                   <ValueDisplay :value="item.totalEmAberto || item.totalAberto || 0" type="currency" :class="getValueClass(item.totalEmAberto || item.totalAberto || 0)" />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <!-- Tabela específica para Saldo Inicial -->
+          <table class="details-table-new saldo-inicial-details" v-else>
+            <thead>
+              <tr>
+                <th>Categoria</th>
+                <th>Valor Total</th>
+                <th>Quantidade de Itens</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in selectedDetails.items" :key="index">
+                <td class="detail-categoria">
+                  <div class="categoria-content">
+                    <div class="categoria-icon">
+                      <i class="pi pi-tag"></i>
+                    </div>
+                    <span class="categoria-name">{{ item.categoria }}</span>
+                  </div>
+                </td>
+                <td class="detail-value">
+                  <ValueDisplay :value="item.valor" type="currency" :class="getValueClass(item.valor)" />
+                </td>
+                <td class="detail-count">
+                  <span class="item-count">{{ item.itens }}</span>
                 </td>
               </tr>
             </tbody>
@@ -366,17 +395,27 @@ const getPeriodCellClass = (periodo, valor) => {
 }
 
 const showDetails = async (categoria, periodo, valor) => {
-  // Não mostrar detalhes para saldo inicial
-  if (categoria.includes('SALDO INICIAL') || linhas.value.find(l => l.categoria === categoria)?.isSaldoInicial) return
+  // Não mostrar detalhes para linha de TOTAL
+  if (categoria === 'TOTAL SALDO INICIAL') return
   
   if (valor === 0) return
   
   console.log('Clicou para ver detalhes:', { categoria, periodo: periodo.label, valor })
   
-  const details = await getDetailsForPeriod(categoria, periodo)
+  let details
+  let displayCategoria = categoria
+  
+  // Se for saldo inicial, ajustar categoria para busca
+  if (categoria.startsWith('💰 ')) {
+    const conta = categoria.replace('💰 ', '')
+    displayCategoria = `SALDO INICIAL - ${conta}`
+    details = await getDetailsForPeriod(displayCategoria, periodo)
+  } else {
+    details = await getDetailsForPeriod(categoria, periodo)
+  }
   
   selectedDetails.value = {
-    categoria,
+    categoria: displayCategoria,
     periodo: periodo.label,
     total: valor,
     items: details
@@ -772,14 +811,22 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   transition: all 0.2s ease;
 }
 
+.value-cell:hover {
+  background: rgba(0, 123, 255, 0.1) !important;
+}
+
 .clickable-value {
   cursor: pointer;
 }
 
-.clickable-value:hover {
+.value-cell.clickable-value:hover {
   background: #007bff !important;
   color: white !important;
   transform: scale(1.05);
+}
+
+.value-cell.clickable-value:hover .saldo-inicial-value {
+  color: white !important;
 }
 
 .realizado-cell {
@@ -841,22 +888,58 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 .saldo-inicial-value {
   font-weight: 700 !important;
   color: #2563eb !important;
-  background: rgba(37, 99, 235, 0.1) !important;
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .saldo-inicial-value.total-saldo {
-  background: rgba(30, 64, 175, 0.2) !important;
   color: #1e40af !important;
-  border: 2px solid rgba(30, 64, 175, 0.4) !important;
   font-weight: 800 !important;
-  box-shadow: 0 2px 6px rgba(30, 64, 175, 0.2);
 }
+
 .saldo-inicial-total {
   color: #6c757d;
   font-style: italic;
+}
+
+/* Tabela de detalhes do saldo inicial */
+.saldo-inicial-details .detail-categoria {
+  text-align: left;
+}
+
+.categoria-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.categoria-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.7rem;
+}
+
+.categoria-name {
+  font-weight: 500;
+  color: #495057;
+  font-size: 0.8rem;
+}
+
+.detail-count {
+  text-align: center;
+}
+
+.item-count {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 /* Dialog de Detalhes */
