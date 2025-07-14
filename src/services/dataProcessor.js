@@ -99,7 +99,7 @@ export class DataProcessor {
     )
     
     // Adicionar saldo inicial no início das linhas
-    const linhasComSaldo = [saldoInicial, ...linhas]
+    const linhasComSaldo = [...saldoInicial, ...linhas]
     
     return { linhas: linhasComSaldo, periodos }
   }
@@ -111,33 +111,56 @@ export class DataProcessor {
       return dataItem < new Date(dataInicio)
     })
     
-    // Calcular saldo acumulado até o início do período
-    const saldoAcumuladoInicial = dadosAnteriores.reduce((sum, item) => sum + item.valor, 0)
+    // Agrupar por conta financeira
+    const contasMap = new Map()
     
-    // Criar linha de saldo inicial
-    const saldoInicial = { 
-      categoria: 'SALDO INICIAL', 
-      total: 0,
-      isSaldoInicial: true
-    }
-    
-    let saldoAcumulado = saldoAcumuladoInicial
-    
-    // Para cada período, calcular o saldo acumulado
-    periodos.forEach(periodo => {
-      // Adicionar movimentações do período atual
-      const movimentacoesPeriodo = filteredData.filter(item => {
-        const dataItem = new Date(item.data_ymd)
-        return this.itemBelongsToPeriod(item, dataItem, periodo)
-      })
-      
-      const valorPeriodo = movimentacoesPeriodo.reduce((sum, item) => sum + item.valor, 0)
-      saldoAcumulado += valorPeriodo
-      
-      saldoInicial[periodo.key] = saldoAcumulado
+    // Inicializar todas as contas com saldo zero
+    filteredData.forEach(item => {
+      const conta = item.conta_financeira_erp_descricao || 'Conta não informada'
+      if (!contasMap.has(conta)) {
+        contasMap.set(conta, {
+          categoria: conta,
+          total: 0,
+          isSaldoInicial: true,
+          saldoAcumuladoInicial: 0
+        })
+      }
     })
     
-    return saldoInicial
+    // Calcular saldo inicial por conta
+    dadosAnteriores.forEach(item => {
+      const conta = item.conta_financeira_erp_descricao || 'Conta não informada'
+      if (contasMap.has(conta)) {
+        contasMap.get(conta).saldoAcumuladoInicial += item.valor
+      }
+    })
+    
+    // Para cada conta, calcular o saldo acumulado por período
+    const linhasSaldoInicial = []
+    
+    contasMap.forEach((contaData, conta) => {
+      const linhaConta = { ...contaData }
+      let saldoAcumulado = contaData.saldoAcumuladoInicial
+      
+      periodos.forEach(periodo => {
+        // Adicionar movimentações do período atual para esta conta específica
+        const movimentacoesPeriodo = filteredData.filter(item => {
+          const dataItem = new Date(item.data_ymd)
+          const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
+          return contaItem === conta && this.itemBelongsToPeriod(item, dataItem, periodo)
+        })
+        
+        const valorPeriodo = movimentacoesPeriodo.reduce((sum, item) => sum + item.valor, 0)
+        saldoAcumulado += valorPeriodo
+        
+        linhaConta[periodo.key] = saldoAcumulado
+      })
+      
+      linhasSaldoInicial.push(linhaConta)
+    })
+    
+    // Ordenar por nome da conta
+    return linhasSaldoInicial.sort((a, b) => a.categoria.localeCompare(b.categoria))
   }
 
   itemBelongsToPeriod(item, dataItem, periodo) {

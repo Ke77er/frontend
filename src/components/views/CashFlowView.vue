@@ -151,7 +151,7 @@
                   class="category-name" 
                   :class="{ 'saldo-inicial': linha.isSaldoInicial }"
                 >
-                  {{ linha.categoria }}
+                  {{ linha.isSaldoInicial ? `💰 ${linha.categoria}` : linha.categoria }}
                 </span>
               </td>
               <td 
@@ -357,7 +357,7 @@ const getPeriodCellClass = (periodo, valor) => {
 
 const showDetails = async (categoria, periodo, valor) => {
   // Não mostrar detalhes para saldo inicial
-  if (categoria === 'SALDO INICIAL') return
+  if (categoria.includes('SALDO INICIAL') || linhas.value.find(l => l.categoria === categoria)?.isSaldoInicial) return
   
   if (valor === 0) return
   
@@ -809,18 +809,21 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 /* Estilos para Saldo Inicial */
 .saldo-inicial {
   font-weight: 700 !important;
-  color: #1565c0 !important;
+  color: #2563eb !important;
   font-size: 0.8rem !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  border-left: 3px solid #2563eb;
 }
 
 .saldo-inicial-value {
   font-weight: 700 !important;
-  color: #1565c0 !important;
-  background: rgba(21, 101, 192, 0.1) !important;
+  color: #2563eb !important;
+  background: rgba(37, 99, 235, 0.1) !important;
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .saldo-inicial-total {
