@@ -66,6 +66,10 @@ export class DataProcessor {
 
   generateCashFlowData(filteredData, dataInicio, dataFim) {
     const periodos = generatePeriods(dataInicio, dataFim)
+    
+    // Calcular saldo inicial (dados anteriores ao período)
+    const saldoInicial = this.calculateSaldoInicial(filteredData, dataInicio, periodos)
+    
     const agrupado = new Map()
     
     filteredData.forEach((item) => {
@@ -94,7 +98,46 @@ export class DataProcessor {
       a.categoria.localeCompare(b.categoria)
     )
     
-    return { linhas, periodos }
+    // Adicionar saldo inicial no início das linhas
+    const linhasComSaldo = [saldoInicial, ...linhas]
+    
+    return { linhas: linhasComSaldo, periodos }
+  }
+
+  calculateSaldoInicial(filteredData, dataInicio, periodos) {
+    // Dados anteriores ao período selecionado
+    const dadosAnteriores = filteredData.filter(item => {
+      const dataItem = new Date(item.data_ymd)
+      return dataItem < new Date(dataInicio)
+    })
+    
+    // Calcular saldo acumulado até o início do período
+    const saldoAcumuladoInicial = dadosAnteriores.reduce((sum, item) => sum + item.valor, 0)
+    
+    // Criar linha de saldo inicial
+    const saldoInicial = { 
+      categoria: 'SALDO INICIAL', 
+      total: 0,
+      isSaldoInicial: true
+    }
+    
+    let saldoAcumulado = saldoAcumuladoInicial
+    
+    // Para cada período, calcular o saldo acumulado
+    periodos.forEach(periodo => {
+      // Adicionar movimentações do período atual
+      const movimentacoesPeriodo = filteredData.filter(item => {
+        const dataItem = new Date(item.data_ymd)
+        return this.itemBelongsToPeriod(item, dataItem, periodo)
+      })
+      
+      const valorPeriodo = movimentacoesPeriodo.reduce((sum, item) => sum + item.valor, 0)
+      saldoAcumulado += valorPeriodo
+      
+      saldoInicial[periodo.key] = saldoAcumulado
+    })
+    
+    return saldoInicial
   }
 
   itemBelongsToPeriod(item, dataItem, periodo) {

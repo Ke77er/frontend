@@ -147,23 +147,33 @@
           <tbody>
             <tr v-for="linha in linhas" :key="linha.categoria" class="data-row">
               <td class="category-cell">
-                <span class="category-name">{{ linha.categoria }}</span>
+                <span 
+                  class="category-name" 
+                  :class="{ 'saldo-inicial': linha.isSaldoInicial }"
+                >
+                  {{ linha.categoria }}
+                </span>
               </td>
               <td 
                 v-for="periodo in periodos" 
                 :key="periodo.key"
                 :class="getPeriodCellClass(periodo, linha[periodo.key])"
                 class="value-cell"
-                @click="showDetails(linha.categoria, periodo, linha[periodo.key])"
+                @click="linha.isSaldoInicial ? null : showDetails(linha.categoria, periodo, linha[periodo.key])"
               >
                 <ValueDisplay 
                   :value="linha[periodo.key] || 0" 
                   type="currency" 
-                  :class="getValueClass(linha[periodo.key] || 0)"
+                  :class="[
+                    getValueClass(linha[periodo.key] || 0),
+                    { 'saldo-inicial-value': linha.isSaldoInicial }
+                  ]"
                 />
               </td>
               <td class="total-cell">
+                <span v-if="linha.isSaldoInicial" class="saldo-inicial-total">-</span>
                 <ValueDisplay 
+                  v-else
                   :value="linha.total" 
                   type="currency" 
                   emphasis 
@@ -346,6 +356,9 @@ const getPeriodCellClass = (periodo, valor) => {
 }
 
 const showDetails = async (categoria, periodo, valor) => {
+  // Não mostrar detalhes para saldo inicial
+  if (categoria === 'SALDO INICIAL') return
+  
   if (valor === 0) return
   
   console.log('Clicou para ver detalhes:', { categoria, periodo: periodo.label, valor })
@@ -791,6 +804,28 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 
 .neutral-value {
   color: #6c757d !important;
+}
+
+/* Estilos para Saldo Inicial */
+.saldo-inicial {
+  font-weight: 700 !important;
+  color: #1565c0 !important;
+  font-size: 0.8rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.saldo-inicial-value {
+  font-weight: 700 !important;
+  color: #1565c0 !important;
+  background: rgba(21, 101, 192, 0.1) !important;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+}
+
+.saldo-inicial-total {
+  color: #6c757d;
+  font-style: italic;
 }
 
 /* Dialog de Detalhes */
