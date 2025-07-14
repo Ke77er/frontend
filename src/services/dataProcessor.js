@@ -240,6 +240,11 @@ export class DataProcessor {
   }
 
   getDetailsForPeriod(filteredData, categoria, periodo) {
+    // Se for uma conta de saldo inicial, mostrar categorias incluídas
+    if (categoria.startsWith('💰 ') || categoria === '📊 TOTAL SALDO INICIAL') {
+      return this.getDetailsForSaldoInicial(filteredData, categoria, periodo)
+    }
+    
     const detailsData = filteredData.filter(item => {
       const itemCategoria = `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`
       if (itemCategoria !== categoria) return false
@@ -287,6 +292,117 @@ export class DataProcessor {
     })
   }
 
+  getDetailsForSaldoInicial(filteredData, contaSelecionada, periodo) {
+    // Para TOTAL, mostrar todas as contas
+    if (contaSelecionada === '📊 TOTAL SALDO INICIAL') {
+      return this.getDetailsForTotalSaldoInicial(filteredData, periodo)
+    }
+
+    // Para conta específica, extrair nome da conta
+    const nomeConta = contaSelecionada.replace('💰 ', '')
+    
+    // Buscar dados anteriores ao período + dados do período atual para esta conta
+    const dadosAnteriores = filteredData.filter(item => {
+      const dataItem = new Date(item.data_ymd)
+      const conta = item.conta_financeira_erp_descricao || 'Conta não informada'
+      return conta === nomeConta && dataItem < new Date(periodo.date)
+    })
+
+    const dadosPeriodo = filteredData.filter(item => {
+      const dataItem = new Date(item.data_ymd)
+      const conta = item.conta_financeira_erp_descricao || 'Conta não informada'
+      return conta === nomeConta && this.itemBelongsToPeriod(item, dataItem, periodo)
+    })
+
+    const todosDados = [...dadosAnteriores, ...dadosPeriodo]
+
+    // Agrupar por categoria
+    const categorias = new Map()
+    
+    todosDados.forEach(item => {
+      const categoria = `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`
+      if (!categorias.has(categoria)) {
+        categorias.set(categoria, {
+          categoria,
+          valor: 0,
+          itens: 0
+        })
+      }
+      const cat = categorias.get(categoria)
+      cat.valor += item.valor
+      cat.itens += 1
+    })
+
+    return Array.from(categorias.values())
+      .sort((a, b) => Math.abs(b.valor) - Math.abs(a.valor))
+      .map(cat => ({
+        titulo: `${cat.categoria} - ${nomeConta}`,
+        documento: `${cat.itens} ${cat.itens === 1 ? 'item' : 'itens'}`,
+        notaFiscal: '-',
+        data: periodo.date,
+        emissao: periodo.date,
+        previsao: null,
+        pessoa: nomeConta,
+        projeto: cat.categoria,
+        valor: cat.valor,
+        valorBruto: cat.valor,
+        totalAberto: cat.valor,
+        totalEmAberto: cat.valor,
+        status: 'Saldo Acumulado',
+        observacoes: `Saldo acumulado da categoria ${cat.categoria} na conta ${nomeConta}`,
+        baixado: true
+      }))
+  }
+
+  getDetailsForTotalSaldoInicial(filteredData, periodo) {
+    // Buscar todas as contas
+    const todasAsContas = new Set()
+    filteredData.forEach(item => {
+      const conta = item.conta_financeira_erp_descricao || 'Conta não informada'
+      todasAsContas.add(conta)
+    })
+
+    const resultado = []
+
+    todasAsContas.forEach(conta => {
+      const dadosAnteriores = filteredData.filter(item => {
+        const dataItem = new Date(item.data_ymd)
+        const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
+        return contaItem === conta && dataItem < new Date(periodo.date)
+      })
+
+      const dadosPeriodo = filteredData.filter(item => {
+        const dataItem = new Date(item.data_ymd)
+        const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
+        return contaItem === conta && this.itemBelongsToPeriod(item, dataItem, periodo)
+      })
+
+      const todosDados = [...dadosAnteriores, ...dadosPeriodo]
+      const saldoConta = todosDados.reduce((sum, item) => sum + item.valor, 0)
+
+      if (saldoConta !== 0) {
+        resultado.push({
+          titulo: `Saldo Total - ${conta}`,
+          documento: `${todosDados.length} ${todosDados.length === 1 ? 'item' : 'itens'}`,
+          notaFiscal: '-',
+          data: periodo.date,
+          emissao: periodo.date,
+          previsao: null,
+          pessoa: conta,
+          projeto: 'Saldo Consolidado',
+          valor: saldoConta,
+          valorBruto: saldoConta,
+          totalAberto: saldoConta,
+          totalEmAberto: saldoConta,
+          status: 'Saldo Acumulado',
+          observacoes: `Saldo total acumulado na conta ${conta}`,
+          baixado: true
+        })
+      }
+    })
+
+    return resultado.sort((a, b) => Math.abs(b.valor) - Math.abs(a.valor))
+  }
   processOverdueData(filteredData, tipo) {
     const hoje = new Date()
     

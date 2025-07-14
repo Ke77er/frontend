@@ -164,9 +164,9 @@
               <td 
                 v-for="periodo in periodos" 
                 :key="periodo.key"
-                :class="getPeriodCellClass(periodo, linha[periodo.key])"
+                :class="getPeriodCellClass(periodo, linha[periodo.key], linha.isSaldoInicial)"
                 class="value-cell"
-                @click="linha.isSaldoInicial ? null : showDetails(linha.categoria, periodo, linha[periodo.key])"
+                @click="showDetails(linha.categoria, periodo, linha[periodo.key])"
               >
                 <ValueDisplay 
                   :value="linha[periodo.key] || 0" 
@@ -235,8 +235,8 @@
                 <th>Vencimento</th>
                 <th>Previsão</th>
                 <th>Valor Bruto</th>
-                <th>Total Aberto</th>
-                <th>Total em Aberto</th>
+                <th>Status</th>
+                <th>Observações</th>
               </tr>
             </thead>
             <tbody>
@@ -258,11 +258,11 @@
                 <td class="detail-value">
                   <ValueDisplay :value="item.valorBruto || item.valor" type="currency" :class="getValueClass(item.valorBruto || item.valor)" />
                 </td>
-                <td class="detail-value">
-                  <ValueDisplay :value="item.totalAberto || 0" type="currency" :class="getValueClass(item.totalAberto || 0)" />
+                <td class="detail-status">
+                  <Tag :value="item.status" :severity="item.status === 'Saldo Acumulado' ? 'info' : 'success'" />
                 </td>
-                <td class="detail-value">
-                  <ValueDisplay :value="item.totalEmAberto || item.totalAberto || 0" type="currency" :class="getValueClass(item.totalEmAberto || item.totalAberto || 0)" />
+                <td class="detail-obs">
+                  <span :title="item.observacoes">{{ item.observacoes || '-' }}</span>
                 </td>
               </tr>
             </tbody>
@@ -357,18 +357,17 @@ const getPeriodHeaderClass = (periodo) => {
 }
 
 const getPeriodCellClass = (periodo, valor) => {
+const getPeriodCellClass = (periodo, valor, isSaldoInicial = false) => {
   const classes = ['period-cell']
   if (periodo.type === 'realizado') classes.push('realizado-cell')
   if (periodo.type === 'previsto') classes.push('previsto-cell')
   if (periodo.isCurrentMonth || periodo.isCurrentDay) classes.push('current-period-cell')
   if (valor !== 0) classes.push('clickable-value')
+  if (isSaldoInicial) classes.push('saldo-inicial-cell')
   return classes.join(' ')
 }
 
 const showDetails = async (categoria, periodo, valor) => {
-  // Não mostrar detalhes para saldo inicial
-  if (categoria.includes('SALDO INICIAL') || linhas.value.find(l => l.categoria === categoria)?.isSaldoInicial) return
-  
   if (valor === 0) return
   
   console.log('Clicou para ver detalhes:', { categoria, periodo: periodo.label, valor })
@@ -794,6 +793,16 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   background: rgba(204, 229, 255, 0.3);
 }
 
+.saldo-inicial-cell {
+  background: rgba(37, 99, 235, 0.1) !important;
+  border: 1px solid rgba(37, 99, 235, 0.2) !important;
+}
+
+.saldo-inicial-cell:hover {
+  background: rgba(37, 99, 235, 0.2) !important;
+  transform: scale(1.02);
+}
+
 .total-cell {
   background: rgba(227, 242, 253, 0.8);
   font-weight: 700;
@@ -818,41 +827,25 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 
 /* Estilos para Saldo Inicial */
 .saldo-inicial {
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   color: #2563eb !important;
-  font-size: 0.8rem !important;
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  border-left: 3px solid #2563eb;
+  font-size: 0.75rem !important;
 }
 
 .saldo-inicial.total-saldo {
-  background: linear-gradient(135deg, #1e40af, #3b82f6) !important;
-  color: white !important;
-  border-left: 4px solid #1e40af !important;
+  color: #1e40af !important;
   font-weight: 800 !important;
-  font-size: 0.85rem !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+  font-size: 0.8rem !important;
 }
 
 .saldo-inicial-value {
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   color: #2563eb !important;
-  background: rgba(37, 99, 235, 0.1) !important;
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
 .saldo-inicial-value.total-saldo {
-  background: rgba(30, 64, 175, 0.2) !important;
   color: #1e40af !important;
-  border: 2px solid rgba(30, 64, 175, 0.4) !important;
   font-weight: 800 !important;
-  box-shadow: 0 2px 6px rgba(30, 64, 175, 0.2);
 }
 .saldo-inicial-total {
   color: #6c757d;
