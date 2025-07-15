@@ -166,7 +166,7 @@
                 :key="periodo.key"
                 :class="getPeriodCellClass(periodo, linha[periodo.key])"
                 class="value-cell"
-                @click="linha.isSaldoInicial ? null : showDetails(linha.categoria, periodo, linha[periodo.key])"
+                @click="linha.isSaldoInicial ? showSaldoDetails(linha, periodo) : showDetails(linha.categoria, periodo, linha[periodo.key])"
               >
                 <ValueDisplay 
                   :value="linha[periodo.key] || 0" 
@@ -178,6 +178,7 @@
                       'total-saldo': linha.isTotalSaldo
                     }
                   ]"
+                  :title="linha.isSaldoInicial && !linha.isTotalSaldo ? getSaldoTooltip(linha, periodo) : ''"
                 />
               </td>
               <td class="total-cell">
@@ -385,6 +386,72 @@ const showDetails = async (categoria, periodo, valor) => {
   showDetailsDialog.value = true
 }
 
+const showSaldoDetails = async (linha, periodo) => {
+  if (linha.isTotalSaldo) return // Não mostrar detalhes para linha de total
+  
+  const conta = linha.categoria
+  const valor = linha[periodo.key] || 0
+  
+  if (valor === 0) return
+  
+  console.log('Clicou para ver detalhes do saldo:', { conta, periodo: periodo.label, valor })
+  
+  // Buscar movimentações desta conta específica até este período
+  const { getFilteredData } = useDataService()
+  const { categoriasSelecionadas, contasSelecionadas } = useReadonlyParametros()
+  
+  const allData = getFilteredData([], [], null, null) // Todos os dados sem filtro de período
+  
+  // Filtrar movimentações desta conta até a data do período
+  const movimentacoesConta = allData.filter(item => {
+    const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
+    const dataItem = new Date(item.data_ymd)
+    const dataPeriodo = new Date(periodo.date)
+    
+    return contaItem === conta && dataItem <= dataPeriodo
+  })
+  
+  // Transformar em formato de detalhes
+  const details = movimentacoesConta.map((item, index) => {
+    const dataItem = new Date(item.data_ymd)
+    const isRealizado = item.baixado === true || item.baixado === 1
+    
+    return {
+      titulo: `${item.categoria_erp_descricao}`,
+      documento: `DOC ${String(1000 + index).padStart(4, '0')}`,
+      notaFiscal: '-',
+      data: item.data_ymd,
+      emissao: item.data_ymd,
+      previsao: isRealizado ? null : item.data_ymd,
+      pessoa: item.pessoa_erp_descricao,
+      projeto: item.categoria_erp_descricao,
+      valor: item.valor,
+      valorBruto: item.valor,
+      totalAberto: isRealizado ? 0 : item.valor,
+      totalEmAberto: isRealizado ? 0 : item.valor,
+      status: isRealizado ? 'Realizado' : 'Previsto',
+      observacoes: item.observacoes || '',
+      baixado: isRealizado
+    }
+  }).sort((a, b) => new Date(b.data) - new Date(a.data)) // Mais recentes primeiro
+  
+  selectedDetails.value = {
+    categoria: `💰 ${conta} - Saldo Acumulado`,
+    periodo: periodo.label,
+    total: valor,
+    items: details
+  }
+  
+  showDetailsDialog.value = true
+}
+
+const getSaldoTooltip = (linha, periodo) => {
+  const conta = linha.categoria
+  const valor = linha[periodo.key] || 0
+  const valorFormatado = formatCurrency(valor)
+  
+  return `${conta}\nSaldo acumulado até ${periodo.label}: ${valorFormatado}\n\nClique para ver detalhes das movimentações`
+}
 const updateData = async () => {
   if (!dataInicio.value || !dataFim.value) return
   
@@ -845,6 +912,14 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
   border: 1px solid rgba(37, 99, 235, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.saldo-inicial-value:hover {
+  background: rgba(37, 99, 235, 0.2) !important;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
 }
 
 .saldo-inicial-value.total-saldo {
@@ -852,6 +927,12 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   color: #1e40af !important;
   border: 2px solid rgba(30, 64, 175, 0.4) !important;
   font-weight: 800 !important;
+  box-shadow: 0 2px 6px rgba(30, 64, 175, 0.2);
+  cursor: default;
+}
+
+.saldo-inicial-value.total-saldo:hover {
+  transform: none;
   box-shadow: 0 2px 6px rgba(30, 64, 175, 0.2);
 }
 .saldo-inicial-total {
