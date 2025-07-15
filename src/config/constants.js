@@ -7,21 +7,15 @@ export const APP_CONFIG = {
 
 export const DATA_SOURCES = {
   googleDrive: {
-    'malta_advocacia': 'https://drive.google.com/uc?export=download&id=SEU_ID_MALTA',
-    'codex_empreendedorismo': 'https://drive.google.com/uc?export=download&id=SEU_ID_CODEX',
-    'fluxo': 'https://drive.google.com/uc?export=download&id=SEU_ID_FLUXO'
+    'malta_advocacia': 'https://drive.google.com/uc?export=download&id=SEU_ID_MALTA'
   },
   api: {
-    'malta_advocacia': 'https://sua-api.com/api/malta-advocacia',
-    'codex_empreendedorismo': 'https://sua-api.com/api/codex-empreendedorismo',
-    'fluxo': 'https://sua-api.com/api/fluxo'
+    'malta_advocacia': 'https://sua-api.com/api/malta-advocacia'
   }
 }
 
 export const COMPANIES = {
-  'malta_advocacia': { label: 'Malta Advocacia', value: 'malta_advocacia' },
-  'codex_empreendedorismo': { label: 'Codex Empreendedorismo', value: 'codex_empreendedorismo' },
-  'fluxo': { label: 'Fluxo', value: 'fluxo' }
+  'malta_advocacia': { label: 'Malta Advocacia', value: 'malta_advocacia' }
 }
 
 export const PAGINATION_OPTIONS = [10, 20, 50, 100]
