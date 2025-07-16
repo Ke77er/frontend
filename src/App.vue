@@ -126,7 +126,26 @@ const goHome = () => {
 <style scoped>
 .app-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 50%, #ddeeff 100%);
+  background: linear-gradient(135deg, var(--wood-50) 0%, var(--wood-100) 50%, var(--wood-200) 100%);
+  position: relative;
+}
+
+.app-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(45deg, rgba(93, 64, 55, 0.02) 25%, transparent 25%),
+    linear-gradient(-45deg, rgba(93, 64, 55, 0.02) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, rgba(93, 64, 55, 0.02) 75%),
+    linear-gradient(-45deg, transparent 75%, rgba(93, 64, 55, 0.02) 75%);
+  background-size: 40px 40px;
+  background-position: 0 0, 0 20px, 20px -20px, -20px 0px;
+  pointer-events: none;
+  z-index: -1;
 }
 
 .main-content {
@@ -152,13 +171,14 @@ const goHome = () => {
 }
 
 .welcome-content {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+  background: linear-gradient(135deg, var(--wood-700) 0%, var(--wood-800) 50%, var(--primary-dark) 100%);
   color: white;
   padding: 2rem;
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(30, 64, 175, 0.3);
+  box-shadow: 0 12px 32px rgba(93, 64, 55, 0.4);
   position: relative;
   overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.1);
 }
 
 .welcome-content::before {
@@ -168,7 +188,7 @@ const goHome = () => {
   right: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
   animation: float 6s ease-in-out infinite;
 }
 
@@ -183,21 +203,31 @@ const goHome = () => {
   margin: 0 auto 1rem;
   font-size: 1.5rem;
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
 }
 
 .welcome-title {
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 2.2rem;
+  font-weight: 800;
   margin-bottom: 0.5rem;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.2);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  letter-spacing: 1px;
 }
 
 .welcome-subtitle {
-  font-size: 1rem;
+  font-size: 1.1rem;
   margin: 0;
   opacity: 0.9;
-  font-weight: 300;
+  font-weight: 400;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-style: italic;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Grid de Navegação Compacta */
@@ -210,52 +240,74 @@ const goHome = () => {
 }
 
 .nav-card {
-  background: white;
+  background: linear-gradient(135deg, var(--wood-50), white);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
+  box-shadow: 0 8px 32px rgba(93, 64, 55, 0.15);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 2px solid transparent;
+  border: 3px solid var(--wood-200);
   display: flex;
   align-items: center;
   gap: 1rem;
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.nav-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.5), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .nav-card:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(30, 64, 175, 0.2);
-  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 16px 48px rgba(93, 64, 55, 0.25);
+  border-color: var(--wood-400);
+}
+
+.nav-card:hover::before {
+  opacity: 1;
 }
 
 .nav-card-icon {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   color: white;
   flex-shrink: 0;
   transition: all 0.3s ease;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2);
 }
 
 .cashflow-card .nav-card-icon {
-  background: linear-gradient(135deg, #1e40af, #3b82f6);
-  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+  background: linear-gradient(135deg, var(--wood-600), var(--wood-700));
+  box-shadow: 0 6px 20px rgba(141, 110, 99, 0.4);
 }
 
 .overdue-card .nav-card-icon {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
+  background: linear-gradient(135deg, var(--danger-color), var(--danger-dark));
   box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
 }
 
 .rawdata-card .nav-card-icon {
-  background: linear-gradient(135deg, #059669, #10b981);
-  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+  background: linear-gradient(135deg, var(--info-color), var(--info-dark));
+  box-shadow: 0 6px 20px rgba(69, 90, 100, 0.4);
 }
 
 .nav-card:hover .nav-card-icon {
@@ -267,17 +319,21 @@ const goHome = () => {
 }
 
 .nav-card-content h3 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--primary-color);
   margin: 0 0 0.5rem 0;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  letter-spacing: 0.5px;
 }
 
 .nav-card-content p {
-  color: #64748b;
+  color: var(--neutral-600);
   margin: 0 0 0.75rem 0;
   font-size: 0.9rem;
   line-height: 1.4;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-style: italic;
 }
 
 .nav-card-features {
@@ -287,32 +343,36 @@ const goHome = () => {
 }
 
 .feature-tag {
-  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-  color: #475569;
+  background: linear-gradient(135deg, var(--wood-100), var(--wood-200));
+  color: var(--neutral-700);
   padding: 0.2rem 0.6rem;
   border-radius: 16px;
   font-size: 0.7rem;
-  font-weight: 500;
-  border: 1px solid #e2e8f0;
+  font-weight: 600;
+  border: 1px solid var(--wood-300);
   transition: all 0.3s ease;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .nav-card:hover .feature-tag {
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-  color: #1e40af;
-  border-color: #3b82f6;
+  background: linear-gradient(135deg, var(--wood-200), var(--wood-300));
+  color: var(--primary-color);
+  border-color: var(--wood-400);
+  transform: scale(1.05);
 }
 
 .nav-card-arrow {
   font-size: 1.25rem;
-  color: #3b82f6;
+  color: var(--wood-600);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .nav-card:hover .nav-card-arrow {
   transform: translateX(6px) scale(1.2);
-  color: #1e40af;
+  color: var(--primary-color);
 }
 
 /* Conteúdo das Views */
@@ -328,22 +388,30 @@ const goHome = () => {
 }
 
 .home-btn {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: var(--wood-600);
+  color: var(--wood-600);
   transition: all 0.3s ease;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .home-btn:hover {
-  background: #3b82f6;
+  background: var(--wood-600);
   color: white;
   transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(141, 110, 99, 0.3);
 }
 
 .current-view-title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #1e40af;
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--primary-color);
   margin: 0;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(93, 64, 55, 0.1);
 }
 
 .view-content {
@@ -406,7 +474,7 @@ const goHome = () => {
   }
   
   .current-view-title {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
   }
 }
 

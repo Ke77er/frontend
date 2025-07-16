@@ -168,26 +168,45 @@ onMounted(() => {
 
 <style scoped>
 .filter-panel {
-  background: white;
+  background: linear-gradient(135deg, var(--wood-50), white);
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(26, 54, 93, 0.08);
+  box-shadow: 0 4px 20px rgba(93, 64, 55, 0.12);
   overflow: hidden;
   margin-bottom: 1.5rem;
+  border: 2px solid var(--wood-200);
 }
 
 .filter-header {
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  background: linear-gradient(135deg, var(--wood-100) 0%, var(--wood-200) 100%);
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--neutral-200);
+  border-bottom: 2px solid var(--wood-300);
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
   transition: all 0.3s ease;
+  position: relative;
+}
+
+.filter-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
 }
 
 .filter-header:hover {
-  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--wood-200) 0%, var(--wood-300) 100%);
+}
+
+.filter-header:hover::before {
+  opacity: 1;
 }
 
 .filter-title {
@@ -196,11 +215,14 @@ onMounted(() => {
   gap: 0.75rem;
   font-weight: 600;
   color: var(--primary-color);
-  font-size: 1rem;
+  font-size: 1.1rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .toggle-btn {
-  color: var(--primary-light);
+  color: var(--wood-600);
 }
 
 .filter-content {
@@ -229,8 +251,11 @@ onMounted(() => {
 
 .filter-label {
   font-weight: 600;
-  color: var(--neutral-600);
+  color: var(--primary-color);
   font-size: 0.875rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .filter-control {
@@ -258,13 +283,19 @@ onMounted(() => {
 .quick-btn {
   font-size: 0.75rem;
   padding: 0.25rem 0.75rem;
-  border-color: var(--primary-light);
-  color: var(--primary-light);
+  border-color: var(--wood-500);
+  color: var(--wood-600);
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .quick-btn:hover {
-  background: var(--primary-light);
+  background: var(--wood-500);
   color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(141, 110, 99, 0.3);
 }
 
 .filter-actions {
