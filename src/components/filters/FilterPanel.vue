@@ -28,31 +28,66 @@
 
         <div class="filter-group">
           <label class="filter-label">Período</label>
-          <div class="date-controls">
-            <Calendar
-              v-model="dataInicio"
-              dateFormat="dd/mm/yy"
-              showIcon
-              placeholder="Início"
-              class="date-input"
-            />
-            <Calendar
-              v-model="dataFim"
-              dateFormat="dd/mm/yy"
-              showIcon
-              placeholder="Fim"
-              class="date-input"
-            />
-          </div>
-          <div class="quick-filters">
-            <Button
-              v-for="filter in quickFilters"
-              :key="filter.key"
-              @click="setQuickFilter(filter.key)"
-              :label="filter.label"
-              class="p-button-outlined p-button-sm quick-btn"
-              size="small"
-            />
+          <div class="date-slider-container">
+            <div class="date-range-info">
+              <div class="date-display">
+                <span class="date-label">De:</span>
+                <span class="date-value">{{ formatDate(dataInicio) }}</span>
+              </div>
+              <div class="period-stats">
+                <div class="stat-item">
+                  <i class="pi pi-calendar"></i>
+                  <span>{{ periodStats.days }} dias</span>
+                </div>
+                <div class="stat-item">
+                  <i class="pi pi-clock"></i>
+                  <span>{{ periodStats.months }} meses</span>
+                </div>
+              </div>
+              <div class="date-display">
+                <span class="date-label">Até:</span>
+                <span class="date-value">{{ formatDate(dataFim) }}</span>
+              </div>
+            </div>
+            
+            <div class="slider-container">
+              <div class="slider-track">
+                <div 
+                  class="slider-range" 
+                  :style="sliderRangeStyle"
+                ></div>
+                <div 
+                  class="slider-thumb start-thumb"
+                  :style="{ left: startThumbPosition }"
+                  @mousedown="startDrag('start', $event)"
+                  @touchstart="startDrag('start', $event)"
+                >
+                  <div class="thumb-tooltip">{{ formatDate(dataInicio) }}</div>
+                </div>
+                <div 
+                  class="slider-thumb end-thumb"
+                  :style="{ left: endThumbPosition }"
+                  @mousedown="startDrag('end', $event)"
+                  @touchstart="startDrag('end', $event)"
+                >
+                  <div class="thumb-tooltip">{{ formatDate(dataFim) }}</div>
+                </div>
+              </div>
+              
+              <div class="slider-labels">
+                <span class="slider-label-start">{{ formatDate(minDate, 'MMM/yy') }}</span>
+                <span class="slider-label-end">{{ formatDate(maxDate, 'MMM/yy') }}</span>
+              </div>
+            </div>
+            
+            <div class="slider-actions">
+              <Button
+                @click="resetToCurrentMonth"
+                label="Mês Atual"
+                icon="pi pi-refresh"
+                class="p-button-outlined p-button-sm reset-btn"
+              />
+            </div>
           </div>
         </div>
         
@@ -98,11 +133,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useParametros } from '../../composables/useParametros'
 import { useDataService } from '../../composables/useDataService'
-import { getQuickFilterDates } from '../../utils/dateUtils'
-import { QUICK_FILTERS } from '../../config/constants'
+import { formatDate } from '../../utils/dateUtils'
+import { startOfMonth, endOfMonth, differenceInDays, differenceInMonths, addDays } from 'date-fns'
 
 const { 
   categoriasSelecionadas, 
@@ -112,14 +147,20 @@ const {
   dataFim
 } = useParametros()
 
-const { getUniqueCategories, getUniqueAccounts, getAvailableCompanies } = useDataService()
+const { getUniqueCategories, getUniqueAccounts, getAvailableCompanies, data } = useDataService()
 
 const isExpanded = ref(false)
 const categorias = ref([])
 const contas = ref([])
 const empresas = ref([])
+const minDate = ref(new Date())
+const maxDate = ref(new Date())
 
-const quickFilters = QUICK_FILTERS
+// Estado do slider
+const isDragging = ref(false)
+const dragType = ref('')
+const dragStartX = ref(0)
+const sliderWidth = ref(0)
 
 const activeFiltersCount = computed(() => {
   let count = 0
@@ -127,6 +168,47 @@ const activeFiltersCount = computed(() => {
   if (contasSelecionadas.value.length > 0) count++
   if (empresaSelecionada.value && empresaSelecionada.value !== 'empresa1') count++
   return count
+})
+
+// Estatísticas do período selecionado
+const periodStats = computed(() => {
+  if (!dataInicio.value || !dataFim.value) {
+    return { days: 0, months: 0 }
+  }
+  
+  const days = differenceInDays(dataFim.value, dataInicio.value) + 1
+  const months = Math.round(differenceInMonths(dataFim.value, dataInicio.value) * 10) / 10
+  
+  return {
+    days,
+    months: months || 0.1
+  }
+})
+
+// Posições dos thumbs do slider
+const startThumbPosition = computed(() => {
+  if (!minDate.value || !maxDate.value || !dataInicio.value) return '0%'
+  
+  const totalDays = differenceInDays(maxDate.value, minDate.value)
+  const startDays = differenceInDays(dataInicio.value, minDate.value)
+  
+  return `${(startDays / totalDays) * 100}%`
+})
+
+const endThumbPosition = computed(() => {
+  if (!minDate.value || !maxDate.value || !dataFim.value) return '100%'
+  
+  const totalDays = differenceInDays(maxDate.value, minDate.value)
+  const endDays = differenceInDays(dataFim.value, minDate.value)
+  
+  return `${(endDays / totalDays) * 100}%`
+})
+
+const sliderRangeStyle = computed(() => {
+  return {
+    left: startThumbPosition.value,
+    width: `calc(${endThumbPosition.value} - ${startThumbPosition.value})`
+  }
 })
 
 const toggleExpanded = () => {
