@@ -326,4 +326,43 @@ export class DataProcessor {
   generateHistoryData(filteredData, dataInicio, dataFim) {
     return generateHistoryData(filteredData, dataInicio, dataFim)
   }
+
+  getSaldoDetails(filteredData, conta, periodo) {
+    // Remover prefixos de emoji e "SALDO INICIAL" para obter o nome da conta
+    const contaLimpa = conta.replace(/^💰\s*/, '').replace(/^TOTAL\s*/, '')
+    
+    // Se for TOTAL SALDO INICIAL, retornar movimentações de todas as contas
+    if (conta.includes('TOTAL SALDO INICIAL')) {
+      return filteredData
+        .filter(item => {
+          const dataItem = new Date(item.data_ymd)
+          return this.itemBelongsToPeriod(item, dataItem, periodo)
+        })
+        .map(item => ({
+          data: item.data_ymd,
+          categoria: `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`,
+          pessoa: item.pessoa_erp_descricao,
+          valor: item.valor,
+          baixado: item.baixado === true || item.baixado === 1
+        }))
+        .sort((a, b) => new Date(b.data) - new Date(a.data))
+    }
+    
+    // Para contas específicas, filtrar por conta financeira
+    return filteredData
+      .filter(item => {
+        const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
+        const dataItem = new Date(item.data_ymd)
+        
+        return contaItem === contaLimpa && this.itemBelongsToPeriod(item, dataItem, periodo)
+      })
+      .map(item => ({
+        data: item.data_ymd,
+        categoria: `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`,
+        pessoa: item.pessoa_erp_descricao,
+        valor: item.valor,
+        baixado: item.baixado === true || item.baixado === 1
+      }))
+      .sort((a, b) => new Date(b.data) - new Date(a.data))
+  }
 }

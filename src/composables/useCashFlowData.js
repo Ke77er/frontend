@@ -59,9 +59,25 @@ export function useCashFlowData() {
     return historyData
   }
   
+  const getSaldoDetails = async (conta, periodo) => {
+    const filteredData = getFilteredData(
+      categoriasSelecionadas.value, 
+      contasSelecionadas.value
+    )
+    
+    console.log('Buscando detalhes do saldo para:', { conta, periodo: periodo.label })
+    
+    const resultado = processor.getSaldoDetails(filteredData, conta, periodo)
+    
+    console.log('Resultado dos detalhes do saldo:', resultado.length, 'movimentações')
+    
+    return resultado
+  }
+  
   return {
     generateCashFlowData,
     getDetailsForPeriod,
-    getHistoryData
+    getHistoryData,
+    getSaldoDetails
   }
 }

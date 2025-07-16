@@ -166,7 +166,7 @@
                 :key="periodo.key"
                 :class="getPeriodCellClass(periodo, linha[periodo.key])"
                 class="value-cell"
-                @click="linha.isSaldoInicial ? null : showDetails(linha.categoria, periodo, linha[periodo.key])"
+                @click="linha.isSaldoInicial ? showSaldoDetails(linha.categoria, periodo, linha[periodo.key]) : showDetails(linha.categoria, periodo, linha[periodo.key])"
               >
                 <ValueDisplay 
                   :value="linha[periodo.key] || 0" 
@@ -270,6 +270,67 @@
         </div>
       </div>
     </Dialog>
+
+    <!-- Dialog de Saldo Inicial -->
+    <Dialog 
+      v-model:visible="showSaldoDialog" 
+      :header="saldoDialogTitle"
+      :modal="true"
+      :style="{ width: '90vw', maxWidth: '1200px' }"
+      class="saldo-dialog"
+    >
+      <div class="saldo-content">
+        <div class="saldo-header">
+          <div class="saldo-info">
+            <div class="saldo-title">{{ selectedSaldo.conta }}</div>
+            <div class="saldo-period">{{ selectedSaldo.periodo }}</div>
+          </div>
+          <div class="saldo-summary">
+            <div class="summary-item">
+              <span class="summary-label">Saldo Acumulado:</span>
+              <ValueDisplay :value="selectedSaldo.valor" type="currency" emphasis :class="getValueClass(selectedSaldo.valor)" />
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Movimentações:</span>
+              <span class="summary-count">{{ selectedSaldo.movimentacoes.length }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="saldo-table-wrapper">
+          <table class="saldo-table">
+            <thead>
+              <tr>
+                <th>Data</th>
+                <th>Categoria</th>
+                <th>Pessoa</th>
+                <th>Valor</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(mov, index) in selectedSaldo.movimentacoes" :key="index">
+                <td class="saldo-date">
+                  <DateDisplay :date="mov.data" />
+                </td>
+                <td class="saldo-categoria">{{ mov.categoria }}</td>
+                <td class="saldo-pessoa">{{ mov.pessoa }}</td>
+                <td class="saldo-value">
+                  <ValueDisplay :value="mov.valor" type="currency" :class="getValueClass(mov.valor)" />
+                </td>
+                <td class="saldo-status">
+                  <Tag 
+                    :value="mov.baixado ? 'Baixado' : 'Em Aberto'" 
+                    :severity="mov.baixado ? 'success' : 'warning'" 
+                    class="status-tag"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template>
 
@@ -284,15 +345,22 @@ import DateDisplay from '../common/DateDisplay.vue'
 
 const loading = ref(false)
 const showDetailsDialog = ref(false)
+const showSaldoDialog = ref(false)
 const selectedDetails = ref({
   categoria: '',
   periodo: '',
   total: 0,
   items: []
 })
+const selectedSaldo = ref({
+  conta: '',
+  periodo: '',
+  valor: 0,
+  movimentacoes: []
+})
 
 const { dataInicio, dataFim, empresaSelecionada } = useReadonlyParametros()
-const { generateCashFlowData, getDetailsForPeriod, getHistoryData } = useCashFlowData()
+const { generateCashFlowData, getDetailsForPeriod, getHistoryData, getSaldoDetails } = useCashFlowData()
 
 const linhas = ref([])
 const periodos = ref([])
@@ -300,6 +368,10 @@ const historyData = ref([])
 
 const detailsTitle = computed(() => 
   `${selectedDetails.value.categoria} - ${selectedDetails.value.periodo}`
+)
+
+const saldoDialogTitle = computed(() => 
+  `Detalhes do Saldo - ${selectedSaldo.value.conta}`
 )
 
 const totals = computed(() => {
@@ -383,6 +455,23 @@ const showDetails = async (categoria, periodo, valor) => {
   }
   
   showDetailsDialog.value = true
+}
+
+const showSaldoDetails = async (conta, periodo, valor) => {
+  if (valor === 0) return
+  
+  console.log('Clicou para ver saldo:', { conta, periodo: periodo.label, valor })
+  
+  const details = await getSaldoDetails(conta, periodo)
+  
+  selectedSaldo.value = {
+    conta,
+    periodo: periodo.label,
+    valor,
+    movimentacoes: details
+  }
+  
+  showSaldoDialog.value = true
 }
 
 const updateData = async () => {
@@ -841,22 +930,155 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 .saldo-inicial-value {
   font-weight: 700 !important;
   color: #2563eb !important;
-  background: rgba(37, 99, 235, 0.1) !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(59, 130, 246, 0.15)) !important;
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
-  border: 1px solid rgba(37, 99, 235, 0.2);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.saldo-inicial-value:hover {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(59, 130, 246, 0.25)) !important;
+  border-color: rgba(37, 99, 235, 0.5);
+  transform: scale(1.02);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
 .saldo-inicial-value.total-saldo {
-  background: rgba(30, 64, 175, 0.2) !important;
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.2), rgba(59, 130, 246, 0.3)) !important;
   color: #1e40af !important;
   border: 2px solid rgba(30, 64, 175, 0.4) !important;
   font-weight: 800 !important;
   box-shadow: 0 2px 6px rgba(30, 64, 175, 0.2);
+  cursor: pointer;
 }
+
+.saldo-inicial-value.total-saldo:hover {
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.3), rgba(59, 130, 246, 0.4)) !important;
+  border-color: rgba(30, 64, 175, 0.6) !important;
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
+}
+
 .saldo-inicial-total {
   color: #6c757d;
   font-style: italic;
+}
+
+/* Dialog de Saldo */
+.saldo-dialog :deep(.p-dialog-header) {
+  background: #2563eb;
+  color: white;
+  border-bottom: 1px solid #1d4ed8;
+  padding: 1rem;
+}
+
+.saldo-dialog :deep(.p-dialog-title) {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.saldo-content {
+  padding: 0;
+}
+
+.saldo-header {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  padding: 1.5rem;
+  border-bottom: 2px solid #3b82f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.saldo-info {
+  flex: 1;
+}
+
+.saldo-title {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.saldo-period {
+  font-size: 0.875rem;
+  color: #1d4ed8;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid rgba(30, 64, 175, 0.2);
+}
+
+.saldo-summary {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.saldo-table-wrapper {
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.saldo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.saldo-table th,
+.saldo-table td {
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.saldo-table th {
+  background: #f1f5f9;
+  color: #1e40af;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.saldo-table tbody tr:nth-child(even) {
+  background: #f8fafc;
+}
+
+.saldo-table tbody tr:hover {
+  background: #e0f2fe;
+}
+
+.saldo-date {
+  text-align: center;
+  min-width: 100px;
+}
+
+.saldo-categoria {
+  color: #475569;
+  font-weight: 500;
+}
+
+.saldo-pessoa {
+  color: #64748b;
+}
+
+.saldo-value {
+  text-align: right;
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.saldo-status {
+  text-align: center;
 }
 
 /* Dialog de Detalhes */

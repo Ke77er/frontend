@@ -74,57 +74,80 @@
           <table class="overdue-table-new">
             <thead>
               <tr>
+                <th class="expand-header"></th>
                 <th class="category-header">Categoria</th>
-                <th class="person-header">Pessoa</th>
-                <th class="date-header">Vencimento</th>
-                <th class="days-header">Dias Atraso</th>
-                <th class="value-header">Valor</th>
-                <th class="total-header">Total por Categoria</th>
+                <th class="count-header">Qtd</th>
+                <th class="total-header">Total</th>
               </tr>
             </thead>
             <tbody>
-              <template v-for="group in groupedData" :key="group.categoria">
-                <tr 
-                  v-for="(item, index) in group.items" 
-                  :key="`${group.categoria}-${index}`"
-                  class="data-row"
-                  :class="{ 'first-in-group': index === 0 }"
+              <template v-for="(group, groupIndex) in groupedData" :key="group.categoria">
+                <tr
+                  class="group-row"
+                  @click="toggleGroup(group.categoria)"
                 >
-                  <td class="category-cell" :class="{ 'category-group-cell': index === 0 }">
-                    <div v-if="index === 0" class="category-content">
+                  <td class="expand-cell">
+                    <Button
+                      :icon="expandedGroups.has(group.categoria) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                      class="p-button-text p-button-sm expand-btn"
+                    />
+                  </td>
+                  <td class="category-cell">
+                    <div class="category-content">
                       <div class="category-icon">
                         <i class="pi pi-exclamation-triangle"></i>
                       </div>
                       <div class="category-info">
                         <span class="category-name">{{ group.categoria }}</span>
-                        <span class="category-count">{{ group.items.length }} {{ group.items.length === 1 ? 'item' : 'itens' }}</span>
+                        <span class="category-description">{{ group.items.length }} {{ group.items.length === 1 ? 'item atrasado' : 'itens atrasados' }}</span>
                       </div>
                     </div>
                   </td>
-                  <td class="person-cell">
-                    <div class="person-content">
-                      <i class="pi pi-user"></i>
-                      <span>{{ item.pessoa }}</span>
+                  <td class="count-cell">
+                    <div class="count-badge">
+                      {{ group.items.length }}
                     </div>
                   </td>
-                  <td class="date-cell">
-                    <DateDisplay :date="item.vencimento" />
-                  </td>
-                  <td class="days-cell">
-                    <div class="days-overdue">
-                      <span class="days-number">{{ getDaysOverdue(item.vencimento) }}</span>
-                      <span class="days-label">dias</span>
-                    </div>
-                  </td>
-                  <td class="value-cell">
-                    <ValueDisplay :value="Math.abs(item.valor)" type="currency" emphasis />
-                  </td>
-                  <td class="total-cell" :class="{ 'total-group-cell': index === 0 }">
-                    <div v-if="index === 0" class="total-content">
-                      <ValueDisplay :value="group.total" type="currency" emphasis class="total-value" />
-                    </div>
+                  <td class="total-cell">
+                    <ValueDisplay :value="group.total" type="currency" emphasis class="total-value" />
                   </td>
                 </tr>
+                
+                <!-- Linhas expandidas -->
+                <template v-if="expandedGroups.has(group.categoria)">
+                  <tr class="expanded-header">
+                    <td></td>
+                    <td class="sub-header">Pessoa</td>
+                    <td class="sub-header">Vencimento</td>
+                    <td class="sub-header">Dias Atraso</td>
+                    <td class="sub-header">Valor</td>
+                  </tr>
+                  <tr 
+                    v-for="(item, itemIndex) in group.items" 
+                    :key="`${group.categoria}-${itemIndex}`"
+                    class="expanded-row"
+                  >
+                    <td></td>
+                    <td class="person-cell">
+                      <div class="person-content">
+                        <i class="pi pi-user"></i>
+                        <span>{{ item.pessoa }}</span>
+                      </div>
+                    </td>
+                    <td class="date-cell">
+                      <DateDisplay :date="item.vencimento" />
+                    </td>
+                    <td class="days-cell">
+                      <div class="days-overdue">
+                        <span class="days-number">{{ getDaysOverdue(item.vencimento) }}</span>
+                        <span class="days-label">dias</span>
+                      </div>
+                    </td>
+                    <td class="value-cell">
+                      <ValueDisplay :value="Math.abs(item.valor)" type="currency" emphasis />
+                    </td>
+                  </tr>
+                </template>
               </template>
             </tbody>
           </table>
@@ -143,6 +166,7 @@ import ValueDisplay from '../common/ValueDisplay.vue'
 import DateDisplay from '../common/DateDisplay.vue'
 
 const tipo = ref('Receber')
+const expandedGroups = ref(new Set())
 
 const tipoOptions = OVERDUE_TYPES
 
@@ -180,6 +204,14 @@ const totalValue = computed(() => {
 const totalItems = computed(() => {
   return dadosFiltrados.value.length
 })
+
+const toggleGroup = (categoria) => {
+  if (expandedGroups.value.has(categoria)) {
+    expandedGroups.value.delete(categoria)
+  } else {
+    expandedGroups.value.add(categoria)
+  }
+}
 
 </script>
 
@@ -382,25 +414,19 @@ const totalItems = computed(() => {
   z-index: 10;
 }
 
+.expand-header {
+  width: 50px;
+  text-align: center;
+}
+
 .category-header {
   text-align: left;
-  min-width: 250px;
+  min-width: 300px;
 }
 
-.person-header {
-  min-width: 200px;
-}
-
-.date-header {
-  min-width: 120px;
-}
-
-.days-header {
-  min-width: 100px;
-}
-
-.value-header {
-  min-width: 120px;
+.count-header {
+  width: 80px;
+  text-align: center;
 }
 
 .total-header {
@@ -410,26 +436,51 @@ const totalItems = computed(() => {
   min-width: 140px;
 }
 
-.data-row:nth-child(even) {
-  background: #f8f9fa;
+.group-row {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 4px solid #dc3545;
 }
 
-.data-row:hover {
-  background: #fef2f2;
+.group-row:hover {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
 }
 
-.first-in-group {
-  border-top: 2px solid #dc3545;
+.expand-cell {
+  text-align: center;
+  width: 50px;
+}
+
+.expand-btn {
+  color: #dc3545 !important;
+  transition: all 0.3s ease;
+}
+
+.expand-btn:hover {
+  color: #c82333 !important;
+  transform: scale(1.1);
+}
+
+.count-cell {
+  text-align: center;
+}
+
+.count-badge {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-block;
+  min-width: 30px;
 }
 
 .category-cell {
   text-align: left;
-  vertical-align: top;
-}
-
-.category-group-cell {
-  background: #fef2f2;
-  border-left: 4px solid #dc3545;
 }
 
 .category-content {
@@ -462,9 +513,35 @@ const totalItems = computed(() => {
   font-size: 0.8rem;
 }
 
-.category-count {
+.category-description {
   font-size: 0.7rem;
   color: #6c757d;
+}
+
+.expanded-header {
+  background: #e9ecef;
+  font-weight: 600;
+  color: #495057;
+}
+
+.sub-header {
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid #dc3545;
+  text-align: center;
+}
+
+.expanded-row {
+  background: #f8f9fa;
+  border-left: 3px solid #f87171;
+}
+
+.expanded-row:nth-child(even) {
+  background: #f8f9fa;
+}
+
+.expanded-row:hover {
+  background: #fef2f2;
 }
 
 .person-cell {
@@ -515,18 +592,6 @@ const totalItems = computed(() => {
 
 .total-cell {
   text-align: right;
-  vertical-align: top;
-}
-
-.total-group-cell {
-  background: #fee2e2;
-  border-left: 4px solid #dc3545;
-}
-
-.total-content {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .total-value {

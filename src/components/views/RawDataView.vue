@@ -68,66 +68,107 @@
         <table class="raw-data-table-new">
           <thead>
             <tr>
-              <th class="date-header">Vencimento</th>
+              <th class="expand-header"></th>
+              <th class="date-header">Data</th>
+              <th class="count-header">Qtd</th>
               <th class="value-header">Valor</th>
-              <th class="category-header">Categoria</th>
-              <th class="person-header">Pessoa</th>
-              <th class="account-header">Conta</th>
-              <th class="status-header">Status</th>
-              <th class="date-header">Data Baixa</th>
-              <th class="obs-header">Observações</th>
             </tr>
           </thead>
           <tbody>
-            <tr 
-              v-for="(item, index) in paginatedData" 
-              :key="index"
-              class="data-row"
-            >
-              <td class="date-cell">
-                <DateDisplay :date="item.data_vencimento" />
-              </td>
-              <td class="value-cell">
-                <ValueDisplay :value="item.valor_total" type="currency" emphasis />
-              </td>
-              <td class="category-cell">
-                <div class="category-content">
-                  <div class="category-icon">
-                    <i class="pi pi-tag"></i>
-                  </div>
-                  <span class="category-name">{{ item.categoria }}</span>
-                </div>
-              </td>
-              <td class="person-cell">
-                <div class="person-content">
-                  <i class="pi pi-user"></i>
-                  <span>{{ item.pessoa }}</span>
-                </div>
-              </td>
-              <td class="account-cell">
-                <div class="account-content">
-                  <i class="pi pi-credit-card"></i>
-                  <span>{{ item.conta }}</span>
-                </div>
-              </td>
-              <td class="status-cell">
-                <div class="status-content">
-                  <Tag 
-                    :value="item.data_baixa ? 'Baixado' : 'Em Aberto'" 
-                    :severity="item.data_baixa ? 'success' : 'warning'" 
-                    class="status-tag"
+            <template v-for="(group, groupIndex) in paginatedGroupedData" :key="group.date">
+              <tr 
+                class="group-row"
+                @click="toggleGroup(group.date)"
+              >
+                <td class="expand-cell">
+                  <Button
+                    :icon="expandedGroups.has(group.date) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                    class="p-button-text p-button-sm expand-btn"
                   />
-                </div>
-              </td>
-              <td class="date-cell">
-                <DateDisplay :date="item.data_baixa" allowEmpty />
-              </td>
-              <td class="obs-cell">
-                <span class="observations" :title="item.observacoes">
-                  {{ item.observacoes || '-' }}
-                </span>
-              </td>
-            </tr>
+                </td>
+                <td class="date-cell">
+                  <div class="date-content">
+                    <div class="date-icon">
+                      <i class="pi pi-calendar"></i>
+                    </div>
+                    <DateDisplay :date="group.date" />
+                  </div>
+                </td>
+                <td class="count-cell">
+                  <div class="count-badge">
+                    {{ group.items.length }}
+                  </div>
+                </td>
+                <td class="value-cell">
+                  <ValueDisplay :value="group.total" type="currency" emphasis />
+                </td>
+              </tr>
+              
+              <!-- Linhas expandidas -->
+              <template v-if="expandedGroups.has(group.date)">
+                <tr class="expanded-header">
+                  <td></td>
+                  <td class="sub-header">Vencimento</td>
+                  <td class="sub-header">Categoria</td>
+                  <td class="sub-header">Pessoa</td>
+                  <td class="sub-header">Conta</td>
+                  <td class="sub-header">Status</td>
+                  <td class="sub-header">Data Baixa</td>
+                  <td class="sub-header">Valor</td>
+                  <td class="sub-header">Observações</td>
+                </tr>
+                <tr 
+                  v-for="(item, itemIndex) in group.items" 
+                  :key="`${group.date}-${itemIndex}`"
+                  class="expanded-row"
+                >
+                  <td></td>
+                  <td class="date-cell">
+                    <DateDisplay :date="item.data_vencimento" />
+                  </td>
+                  <td class="category-cell">
+                    <div class="category-content">
+                      <div class="category-icon">
+                        <i class="pi pi-tag"></i>
+                      </div>
+                      <span class="category-name">{{ item.categoria }}</span>
+                    </div>
+                  </td>
+                  <td class="person-cell">
+                    <div class="person-content">
+                      <i class="pi pi-user"></i>
+                      <span>{{ item.pessoa }}</span>
+                    </div>
+                  </td>
+                  <td class="account-cell">
+                    <div class="account-content">
+                      <i class="pi pi-credit-card"></i>
+                      <span>{{ item.conta }}</span>
+                    </div>
+                  </td>
+                  <td class="status-cell">
+                    <div class="status-content">
+                      <Tag 
+                        :value="item.data_baixa ? 'Baixado' : 'Em Aberto'" 
+                        :severity="item.data_baixa ? 'success' : 'warning'" 
+                        class="status-tag"
+                      />
+                    </div>
+                  </td>
+                  <td class="date-cell">
+                    <DateDisplay :date="item.data_baixa" allowEmpty />
+                  </td>
+                  <td class="value-cell">
+                    <ValueDisplay :value="item.valor_total" type="currency" emphasis />
+                  </td>
+                  <td class="obs-cell">
+                    <span class="observations" :title="item.observacoes">
+                      {{ item.observacoes || '-' }}
+                    </span>
+                  </td>
+                </tr>
+              </template>
+            </template>
           </tbody>
         </table>
       </div>
@@ -135,7 +176,7 @@
       <!-- Paginação Customizada -->
       <div class="pagination-container">
         <div class="pagination-info">
-          <span>Mostrando {{ startIndex + 1 }} - {{ endIndex }} de {{ dadosFiltrados.length }} registros</span>
+          <span>Mostrando {{ startIndex + 1 }} - {{ endIndex }} de {{ groupedData.length }} grupos ({{ totalItems }} registros)</span>
         </div>
         <div class="pagination-controls">
           <Button
@@ -178,6 +219,7 @@ import DateDisplay from '../common/DateDisplay.vue'
 const globalFilter = ref('')
 const currentPage = ref(1)
 const rowsPerPage = ref(20)
+const expandedGroups = ref(new Set())
 
 const rowsOptions = PAGINATION_OPTIONS
 
@@ -197,6 +239,32 @@ const dadosFiltrados = computed(() => {
   )
 })
 
+const groupedData = computed(() => {
+  const groups = new Map()
+  
+  dadosFiltrados.value.forEach(item => {
+    const date = item.data_vencimento
+    if (!groups.has(date)) {
+      groups.set(date, {
+        date,
+        items: [],
+        total: 0
+      })
+    }
+    
+    const group = groups.get(date)
+    group.items.push(item)
+    group.total += item.valor_total
+  })
+  
+  return Array.from(groups.values())
+    .sort((a, b) => new Date(b.date) - new Date(a.date))
+})
+
+const totalItems = computed(() => {
+  return dadosFiltrados.value.length
+})
+
 const baixadosCount = computed(() => {
   return dadosFiltrados.value.filter(item => item.data_baixa).length
 })
@@ -206,7 +274,7 @@ const abertoCount = computed(() => {
 })
 
 const totalPages = computed(() => {
-  return Math.ceil(dadosFiltrados.value.length / rowsPerPage.value)
+  return Math.ceil(groupedData.value.length / rowsPerPage.value)
 })
 
 const startIndex = computed(() => {
@@ -214,12 +282,20 @@ const startIndex = computed(() => {
 })
 
 const endIndex = computed(() => {
-  return Math.min(startIndex.value + rowsPerPage.value, dadosFiltrados.value.length)
+  return Math.min(startIndex.value + rowsPerPage.value, groupedData.value.length)
 })
 
-const paginatedData = computed(() => {
-  return dadosFiltrados.value.slice(startIndex.value, endIndex.value)
+const paginatedGroupedData = computed(() => {
+  return groupedData.value.slice(startIndex.value, endIndex.value)
 })
+
+const toggleGroup = (date) => {
+  if (expandedGroups.value.has(date)) {
+    expandedGroups.value.delete(date)
+  } else {
+    expandedGroups.value.add(date)
+  }
+}
 
 const formatDateRange = () => {
   if (!dataInicio.value || !dataFim.value) return 'Período não definido'
@@ -267,6 +343,7 @@ const exportData = () => {
 // Reset page when filter changes
 const resetPage = () => {
   currentPage.value = 1
+  expandedGroups.value.clear()
 }
 
 // Watch for filter changes
@@ -453,6 +530,16 @@ watch([globalFilter, rowsPerPage], resetPage)
   z-index: 10;
 }
 
+.expand-header {
+  width: 50px;
+  text-align: center;
+}
+
+.count-header {
+  width: 80px;
+  text-align: center;
+}
+
 .date-header {
   min-width: 120px;
 }
@@ -485,11 +572,90 @@ watch([globalFilter, rowsPerPage], resetPage)
   min-width: 200px;
 }
 
-.data-row:nth-child(even) {
+.group-row {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-left: 4px solid #17a2b8;
+}
+
+.group-row:hover {
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e0);
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(23, 162, 184, 0.2);
+}
+
+.expand-cell {
+  text-align: center;
+  width: 50px;
+}
+
+.expand-btn {
+  color: #17a2b8 !important;
+  transition: all 0.3s ease;
+}
+
+.expand-btn:hover {
+  color: #138496 !important;
+  transform: scale(1.1);
+}
+
+.date-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.date-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #17a2b8, #20c997);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.8rem;
+}
+
+.count-cell {
+  text-align: center;
+}
+
+.count-badge {
+  background: linear-gradient(135deg, #6c757d, #495057);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  display: inline-block;
+  min-width: 30px;
+}
+
+.expanded-header {
+  background: #e9ecef;
+  font-weight: 600;
+  color: #495057;
+}
+
+.sub-header {
+  font-size: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid #17a2b8;
+  text-align: center;
+}
+
+.expanded-row {
+  background: #f8f9fa;
+  border-left: 3px solid #20c997;
+}
+
+.expanded-row:nth-child(even) {
   background: #f8f9fa;
 }
 
-.data-row:hover {
+.expanded-row:hover {
   background: #e3f2fd;
 }
 
