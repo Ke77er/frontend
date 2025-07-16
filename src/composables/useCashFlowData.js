@@ -59,6 +59,21 @@ export function useCashFlowData() {
     return historyData
   }
   
+  const getHistoryDetails = async (date, tipo) => {
+    const filteredData = getFilteredData(
+      categoriasSelecionadas.value, 
+      contasSelecionadas.value
+    )
+    
+    console.log('Buscando detalhes do histórico para:', { date, tipo })
+    
+    const resultado = processor.getHistoryDetails(filteredData, date, tipo)
+    
+    console.log('Resultado dos detalhes do histórico:', resultado.length, 'itens')
+    
+    return resultado
+  }
+  
   const getSaldoDetails = async (conta, periodo) => {
     const filteredData = getFilteredData(
       categoriasSelecionadas.value, 
@@ -78,6 +93,7 @@ export function useCashFlowData() {
     generateCashFlowData,
     getDetailsForPeriod,
     getHistoryData,
+    getHistoryDetails,
     getSaldoDetails
   }
 }

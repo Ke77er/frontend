@@ -327,6 +327,32 @@ export class DataProcessor {
     return generateHistoryData(filteredData, dataInicio, dataFim)
   }
 
+  getHistoryDetails(filteredData, date, tipo) {
+    const targetDate = new Date(date)
+    const dateString = targetDate.toISOString().split('T')[0]
+    
+    let itemsForDate = filteredData.filter(item => {
+      const itemDate = new Date(item.data_ymd)
+      const itemDateString = itemDate.toISOString().split('T')[0]
+      return itemDateString === dateString
+    })
+    
+    // Filtrar por tipo se necessário
+    if (tipo === 'receitas') {
+      itemsForDate = itemsForDate.filter(item => item.valor > 0)
+    } else if (tipo === 'despesas') {
+      itemsForDate = itemsForDate.filter(item => item.valor < 0)
+    }
+    // Para 'saldo', retorna todos os itens
+    
+    return itemsForDate.map(item => ({
+      categoria: `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`,
+      pessoa: item.pessoa_erp_descricao,
+      conta: item.conta_financeira_erp_descricao,
+      valor: item.valor,
+      baixado: item.baixado === true || item.baixado === 1
+    })).sort((a, b) => Math.abs(b.valor) - Math.abs(a.valor))
+  }
   getSaldoDetails(filteredData, conta, periodo) {
     // Remover prefixos de emoji e "SALDO INICIAL" para obter o nome da conta
     const contaLimpa = conta.replace(/^💰\s*/, '').replace(/^TOTAL\s*/, '')

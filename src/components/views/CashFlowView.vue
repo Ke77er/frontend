@@ -53,11 +53,11 @@
         <div class="history-legend">
           <div class="legend-item">
             <div class="legend-color positive"></div>
-            <span>Entradas</span>
+            <span>Receitas (Entradas)</span>
           </div>
           <div class="legend-item">
             <div class="legend-color negative"></div>
-            <span>Saídas</span>
+            <span>Despesas (Saídas)</span>
           </div>
           <div class="legend-item">
             <div class="legend-color balance"></div>
@@ -78,16 +78,18 @@
               <!-- Barras de entrada e saída -->
               <div class="chart-bars">
                 <div 
-                  v-if="item.entradas > 0"
+                  v-if="item.receitas > 0"
                   class="chart-bar positive"
-                  :style="{ height: `${Math.abs(item.entradas) / Math.max(maxValue, 1) * 100}px` }"
-                  :title="`Entradas: ${formatCurrency(item.entradas)}`"
+                  :style="{ height: `${Math.abs(item.receitas) / Math.max(maxValue, 1) * 100}px` }"
+                  :title="`Receitas: ${formatCurrency(item.receitas)}`"
+                  @click="showHistoryDetails(item, 'receitas')"
                 ></div>
                 <div 
-                  v-if="item.saidas < 0"
+                  v-if="item.despesas < 0"
                   class="chart-bar negative"
-                  :style="{ height: `${Math.abs(item.saidas) / Math.max(maxValue, 1) * 100}px` }"
-                  :title="`Saídas: ${formatCurrency(item.saidas)}`"
+                  :style="{ height: `${Math.abs(item.despesas) / Math.max(maxValue, 1) * 100}px` }"
+                  :title="`Despesas: ${formatCurrency(item.despesas)}`"
+                  @click="showHistoryDetails(item, 'despesas')"
                 ></div>
               </div>
               
@@ -99,6 +101,7 @@
                   backgroundColor: item.saldoAcumulado >= 0 ? '#10b981' : '#ef4444'
                 }"
                 :title="`Saldo: ${formatCurrency(item.saldoAcumulado)}`"
+                @click="showHistoryDetails(item, 'saldo')"
               ></div>
               
               <!-- Label do dia -->
@@ -331,6 +334,65 @@
         </div>
       </div>
     </Dialog>
+
+    <!-- Dialog de Detalhes do Histórico -->
+    <Dialog 
+      v-model:visible="showHistoryDialog" 
+      :header="historyDialogTitle"
+      :modal="true"
+      :style="{ width: '90vw', maxWidth: '1200px' }"
+      class="history-dialog"
+    >
+      <div class="history-content">
+        <div class="history-header">
+          <div class="history-info">
+            <div class="history-title">{{ selectedHistory.tipo }}</div>
+            <div class="history-date">{{ selectedHistory.data }}</div>
+          </div>
+          <div class="history-summary">
+            <div class="summary-item">
+              <span class="summary-label">Valor Total:</span>
+              <ValueDisplay :value="selectedHistory.valor" type="currency" emphasis :class="getValueClass(selectedHistory.valor)" />
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Itens:</span>
+              <span class="summary-count">{{ selectedHistory.items.length }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="history-table-wrapper">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>Categoria</th>
+                <th>Pessoa</th>
+                <th>Conta</th>
+                <th>Valor</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in selectedHistory.items" :key="index">
+                <td class="history-categoria">{{ item.categoria }}</td>
+                <td class="history-pessoa">{{ item.pessoa }}</td>
+                <td class="history-conta">{{ item.conta }}</td>
+                <td class="history-value">
+                  <ValueDisplay :value="item.valor" type="currency" :class="getValueClass(item.valor)" />
+                </td>
+                <td class="history-status">
+                  <Tag 
+                    :value="item.baixado ? 'Baixado' : 'Em Aberto'" 
+                    :severity="item.baixado ? 'success' : 'warning'" 
+                    class="status-tag"
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </Dialog>
   </div>
 </template>
 
@@ -346,6 +408,7 @@ import DateDisplay from '../common/DateDisplay.vue'
 const loading = ref(false)
 const showDetailsDialog = ref(false)
 const showSaldoDialog = ref(false)
+const showHistoryDialog = ref(false)
 const selectedDetails = ref({
   categoria: '',
   periodo: '',
@@ -358,9 +421,15 @@ const selectedSaldo = ref({
   valor: 0,
   movimentacoes: []
 })
+const selectedHistory = ref({
+  tipo: '',
+  data: '',
+  valor: 0,
+  items: []
+})
 
 const { dataInicio, dataFim, empresaSelecionada } = useReadonlyParametros()
-const { generateCashFlowData, getDetailsForPeriod, getHistoryData, getSaldoDetails } = useCashFlowData()
+const { generateCashFlowData, getDetailsForPeriod, getHistoryData, getSaldoDetails, getHistoryDetails } = useCashFlowData()
 
 const linhas = ref([])
 const periodos = ref([])
@@ -372,6 +441,10 @@ const detailsTitle = computed(() =>
 
 const saldoDialogTitle = computed(() => 
   `Detalhes do Saldo - ${selectedSaldo.value.conta}`
+)
+
+const historyDialogTitle = computed(() => 
+  `Detalhes do Histórico - ${selectedHistory.value.tipo}`
 )
 
 const totals = computed(() => {
@@ -398,7 +471,7 @@ const totals = computed(() => {
 const maxValue = computed(() => {
   if (historyData.value.length === 0) return 1000
   return Math.max(
-    ...historyData.value.map(item => Math.max(Math.abs(item.entradas), Math.abs(item.saidas))),
+    ...historyData.value.map(item => Math.max(Math.abs(item.receitas), Math.abs(item.despesas))),
     1000
   )
 })
@@ -472,6 +545,39 @@ const showSaldoDetails = async (conta, periodo, valor) => {
   }
   
   showSaldoDialog.value = true
+}
+
+const showHistoryDetails = async (historyItem, tipo) => {
+  console.log('Clicou para ver histórico:', { data: historyItem.date, tipo })
+  
+  const details = await getHistoryDetails(historyItem.date, tipo)
+  
+  let tipoLabel = ''
+  let valor = 0
+  
+  switch (tipo) {
+    case 'receitas':
+      tipoLabel = 'Receitas (Entradas)'
+      valor = historyItem.receitas
+      break
+    case 'despesas':
+      tipoLabel = 'Despesas (Saídas)'
+      valor = historyItem.despesas
+      break
+    case 'saldo':
+      tipoLabel = 'Saldo Acumulado'
+      valor = historyItem.saldoAcumulado
+      break
+  }
+  
+  selectedHistory.value = {
+    tipo: tipoLabel,
+    data: historyItem.label,
+    valor,
+    items: details
+  }
+  
+  showHistoryDialog.value = true
 }
 
 const updateData = async () => {
@@ -688,10 +794,12 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   border-radius: 2px 2px 0 0;
   min-height: 2px;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .chart-bar:hover {
   transform: scaleY(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .chart-bar.positive {
@@ -709,6 +817,13 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   position: absolute;
   border: 2px solid white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.balance-point:hover {
+  transform: scale(1.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .balance-line {
@@ -964,6 +1079,120 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 .saldo-inicial-total {
   color: #6c757d;
   font-style: italic;
+}
+
+/* Dialog de Histórico */
+.history-dialog :deep(.p-dialog-header) {
+  background: #6d4c41;
+  color: white;
+  border-bottom: 1px solid #5d4037;
+  padding: 1rem;
+}
+
+.history-dialog :deep(.p-dialog-title) {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.history-content {
+  padding: 0;
+}
+
+.history-header {
+  background: linear-gradient(135deg, #f5f1eb, #ede7db);
+  padding: 1.5rem;
+  border-bottom: 2px solid #d4c4a8;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.history-info {
+  flex: 1;
+}
+
+.history-title {
+  font-weight: 700;
+  color: #5d4037;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.history-date {
+  font-size: 0.875rem;
+  color: #6d4c41;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid rgba(93, 64, 55, 0.2);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.history-summary {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+
+.history-table-wrapper {
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.history-table th,
+.history-table td {
+  padding: 0.75rem;
+  border: 1px solid #e0d4c1;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.history-table th {
+  background: linear-gradient(135deg, #ede7db, #e0d4c1);
+  color: #5d4037;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  font-family: Georgia, 'Times New Roman', serif;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.history-table tbody tr:nth-child(even) {
+  background: #faf8f5;
+}
+
+.history-table tbody tr:hover {
+  background: linear-gradient(135deg, #f5f1eb, #ede7db);
+}
+
+.history-categoria,
+.history-pessoa,
+.history-conta {
+  color: #5d4037;
+  font-weight: 500;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+.history-value {
+  text-align: right;
+  font-weight: 600;
+  min-width: 120px;
+}
+
+.history-status {
+  text-align: center;
 }
 
 /* Dialog de Saldo */

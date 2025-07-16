@@ -162,21 +162,21 @@ export const generateHistoryData = (filteredData, dataInicio, dataFim) => {
       format(new Date(item.data_ymd), 'yyyy-MM-dd') === diaFormatado
     )
     
-    const entradas = dadosDoDia
+    const receitas = dadosDoDia
       .filter(item => item.valor > 0)
       .reduce((sum, item) => sum + item.valor, 0)
     
-    const saidas = dadosDoDia
+    const despesas = dadosDoDia
       .filter(item => item.valor < 0)
       .reduce((sum, item) => sum + item.valor, 0)
     
-    saldoAcumulado += entradas + saidas
+    saldoAcumulado += receitas + despesas
     
     return {
       date: dia,
       label: format(dia, 'dd', { locale: ptBR }),
-      entradas,
-      saidas,
+      receitas,
+      despesas,
       saldoAcumulado
     }
   })
