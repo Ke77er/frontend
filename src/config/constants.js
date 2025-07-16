@@ -20,13 +20,6 @@ export const COMPANIES = {
 
 export const PAGINATION_OPTIONS = [10, 20, 50, 100]
 
-export const QUICK_FILTERS = [
-  { key: 'hoje', label: 'Hoje' },
-  { key: 'semana', label: 'Semana' },
-  { key: 'mes', label: 'Mês' },
-  { key: 'trimestre', label: 'Trimestre' }
-]
-
 export const OVERDUE_TYPES = [
   { label: 'A Receber', value: 'Receber' },
   { label: 'A Pagar', value: 'Pagar' }

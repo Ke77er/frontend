@@ -26,38 +26,26 @@
           />
         </div>
 
-        <div class="filter-group">
+        <div class="filter-group period-group">
           <label class="filter-label">Período</label>
-          <div class="date-slider-container">
-            <div class="date-range-info">
-              <div class="date-display">
-                <span class="date-label">De:</span>
-                <span class="date-value">{{ formatDate(dataInicio) }}</span>
+          <div class="period-slider-container">
+            <div class="period-info">
+              <div class="period-dates">
+                <span class="period-date">{{ formatDate(dataInicio) }}</span>
+                <span class="period-separator">até</span>
+                <span class="period-date">{{ formatDate(dataFim) }}</span>
               </div>
-              <div class="period-stats">
-                <div class="stat-item">
-                  <i class="pi pi-calendar"></i>
-                  <span>{{ periodStats?.days || 0 }} dias</span>
-                </div>
-                <div class="stat-item">
-                  <i class="pi pi-clock"></i>
-                  <span>{{ periodStats?.months || 0 }} meses</span>
-                </div>
-              </div>
-              <div class="date-display">
-                <span class="date-label">Até:</span>
-                <span class="date-value">{{ formatDate(dataFim) }}</span>
+              <div class="period-duration">
+                <i class="pi pi-calendar"></i>
+                <span>{{ periodDuration }}</span>
               </div>
             </div>
             
             <div class="slider-container">
-              <div class="slider-track">
+              <div class="slider-track" ref="sliderTrack">
+                <div class="slider-range" :style="rangeStyle"></div>
                 <div 
-                  class="slider-range" 
-                  :style="sliderRangeStyle"
-                ></div>
-                <div 
-                  class="slider-thumb start-thumb"
+                  class="slider-thumb slider-thumb-start" 
                   :style="{ left: startThumbPosition }"
                   @mousedown="startDrag('start', $event)"
                   @touchstart="startDrag('start', $event)"
@@ -65,7 +53,7 @@
                   <div class="thumb-tooltip">{{ formatDate(dataInicio) }}</div>
                 </div>
                 <div 
-                  class="slider-thumb end-thumb"
+                  class="slider-thumb slider-thumb-end" 
                   :style="{ left: endThumbPosition }"
                   @mousedown="startDrag('end', $event)"
                   @touchstart="startDrag('end', $event)"
@@ -75,18 +63,9 @@
               </div>
               
               <div class="slider-labels">
-                <span class="slider-label-start">{{ formatDate(minDate, 'MMM/yy') }}</span>
-                <span class="slider-label-end">{{ formatDate(maxDate, 'MMM/yy') }}</span>
+                <span class="slider-label-start">{{ formatDate(minDate) }}</span>
+                <span class="slider-label-end">{{ formatDate(maxDate) }}</span>
               </div>
-            </div>
-            
-            <div class="slider-actions">
-              <Button
-                @click="resetToCurrentMonth"
-                label="Mês Atual"
-                icon="pi pi-refresh"
-                class="p-button-outlined p-button-sm reset-btn"
-              />
             </div>
           </div>
         </div>
@@ -126,6 +105,12 @@
             icon="pi pi-times"
             class="p-button-outlined p-button-secondary p-button-sm"
           />
+          <Button
+            @click="resetToCurrentMonth"
+            label="Mês Atual"
+            icon="pi pi-refresh"
+            class="p-button-outlined p-button-sm current-month-btn"
+          />
         </div>
       </div>
     </div>
@@ -133,7 +118,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useParametros } from '../../composables/useParametros'
 import { useDataService } from '../../composables/useDataService'
 import { formatDate } from '../../utils/dateUtils'
@@ -155,12 +140,9 @@ const contas = ref([])
 const empresas = ref([])
 const minDate = ref(new Date())
 const maxDate = ref(new Date())
-
-// Estado do slider
+const sliderTrack = ref(null)
 const isDragging = ref(false)
 const dragType = ref('')
-const dragStartX = ref(0)
-const sliderWidth = ref(0)
 
 const activeFiltersCount = computed(() => {
   let count = 0
@@ -170,41 +152,49 @@ const activeFiltersCount = computed(() => {
   return count
 })
 
-// Estatísticas do período selecionado
-const periodStats = computed(() => {
-  if (!dataInicio.value || !dataFim.value) {
-    return { days: 0, months: 0 }
-  }
+const periodDuration = computed(() => {
+  if (!dataInicio.value || !dataFim.value) return ''
   
   const days = differenceInDays(dataFim.value, dataInicio.value) + 1
-  const months = Math.round(differenceInMonths(dataFim.value, dataInicio.value) * 10) / 10
+  const months = differenceInMonths(dataFim.value, dataInicio.value)
   
-  return {
-    days,
-    months: months || 0.1
+  if (days === 1) {
+    return '1 dia'
+  } else if (days <= 31 && months === 0) {
+    return `${days} dias`
+  } else if (months === 1 && days <= 31) {
+    return '1 mês'
+  } else if (months > 0) {
+    const remainingDays = days - (months * 30)
+    if (remainingDays <= 0) {
+      return `${months} ${months === 1 ? 'mês' : 'meses'}`
+    } else {
+      return `${months} ${months === 1 ? 'mês' : 'meses'} e ${remainingDays} dias`
+    }
+  } else {
+    return `${days} dias`
   }
 })
 
-// Posições dos thumbs do slider
+const totalDays = computed(() => {
+  return differenceInDays(maxDate.value, minDate.value)
+})
+
 const startThumbPosition = computed(() => {
-  if (!minDate.value || !maxDate.value || !dataInicio.value) return '0%'
-  
-  const totalDays = differenceInDays(maxDate.value, minDate.value)
-  const startDays = differenceInDays(dataInicio.value, minDate.value)
-  
-  return `${(startDays / totalDays) * 100}%`
+  if (!dataInicio.value || totalDays.value === 0) return '0%'
+  const days = differenceInDays(dataInicio.value, minDate.value)
+  const percentage = (days / totalDays.value) * 100
+  return `${Math.max(0, Math.min(100, percentage))}%`
 })
 
 const endThumbPosition = computed(() => {
-  if (!minDate.value || !maxDate.value || !dataFim.value) return '100%'
-  
-  const totalDays = differenceInDays(maxDate.value, minDate.value)
-  const endDays = differenceInDays(dataFim.value, minDate.value)
-  
-  return `${(endDays / totalDays) * 100}%`
+  if (!dataFim.value || totalDays.value === 0) return '100%'
+  const days = differenceInDays(dataFim.value, minDate.value)
+  const percentage = (days / totalDays.value) * 100
+  return `${Math.max(0, Math.min(100, percentage))}%`
 })
 
-const sliderRangeStyle = computed(() => {
+const rangeStyle = computed(() => {
   return {
     left: startThumbPosition.value,
     width: `calc(${endThumbPosition.value} - ${startThumbPosition.value})`
@@ -215,16 +205,16 @@ const toggleExpanded = () => {
   isExpanded.value = !isExpanded.value
 }
 
-const setQuickFilter = (periodo) => {
-  const { inicio, fim } = getQuickFilterDates(periodo)
-  dataInicio.value = inicio
-  dataFim.value = fim
-}
-
 const clearFilters = () => {
   categoriasSelecionadas.value = []
   contasSelecionadas.value = []
-  setQuickFilter('mes')
+  resetToCurrentMonth()
+}
+
+const resetToCurrentMonth = () => {
+  const now = new Date()
+  dataInicio.value = startOfMonth(now)
+  dataFim.value = endOfMonth(now)
 }
 
 const updateOptions = () => {
@@ -232,16 +222,95 @@ const updateOptions = () => {
   contas.value = getUniqueAccounts()
 }
 
-watch(empresaSelecionada, updateOptions)
+const detectDateRange = () => {
+  const dados = data.value
+  if (!dados || dados.length === 0) {
+    const now = new Date()
+    minDate.value = startOfMonth(now)
+    maxDate.value = endOfMonth(now)
+    return
+  }
+  
+  const dates = dados
+    .map(item => new Date(item.data_ymd))
+    .filter(date => !isNaN(date.getTime()))
+    .sort((a, b) => a - b)
+  
+  if (dates.length > 0) {
+    minDate.value = dates[0]
+    maxDate.value = dates[dates.length - 1]
+  } else {
+    const now = new Date()
+    minDate.value = startOfMonth(now)
+    maxDate.value = endOfMonth(now)
+  }
+  
+  console.log('Range de datas detectado:', {
+    min: formatDate(minDate.value),
+    max: formatDate(maxDate.value),
+    total: dados.length
+  })
+}
 
-onMounted(() => {
+const startDrag = (type, event) => {
+  event.preventDefault()
+  isDragging.value = true
+  dragType.value = type
+  
+  const handleMouseMove = (e) => {
+    if (!isDragging.value || !sliderTrack.value) return
+    
+    const rect = sliderTrack.value.getBoundingClientRect()
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX)
+    const percentage = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100))
+    
+    const newDays = Math.round((percentage / 100) * totalDays.value)
+    const newDate = addDays(minDate.value, newDays)
+    
+    if (type === 'start') {
+      if (newDate <= dataFim.value) {
+        dataInicio.value = newDate
+      }
+    } else {
+      if (newDate >= dataInicio.value) {
+        dataFim.value = newDate
+      }
+    }
+  }
+  
+  const handleMouseUp = () => {
+    isDragging.value = false
+    dragType.value = ''
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+    document.removeEventListener('touchmove', handleMouseMove)
+    document.removeEventListener('touchend', handleMouseUp)
+  }
+  
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+  document.addEventListener('touchmove', handleMouseMove)
+  document.addEventListener('touchend', handleMouseUp)
+}
+
+watch(empresaSelecionada, () => {
+  updateOptions()
+  detectDateRange()
+})
+
+watch(data, detectDateRange)
+
+onMounted(async () => {
   empresas.value = getAvailableCompanies()
   if (empresas.value.length > 0 && !empresaSelecionada.value) {
     empresaSelecionada.value = empresas.value[0].value
   }
   
-  if (!dataInicio.value) {
-    setQuickFilter('mes')
+  await nextTick()
+  detectDateRange()
+  
+  if (!dataInicio.value || !dataFim.value) {
+    resetToCurrentMonth()
   }
   
   updateOptions()
@@ -341,6 +410,11 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
+.period-group {
+  grid-column: span 2;
+  min-width: 400px;
+}
+
 .filter-label {
   font-weight: 600;
   color: var(--primary-color);
@@ -354,28 +428,167 @@ onMounted(() => {
   min-width: 180px;
 }
 
-.date-controls {
+.period-slider-container {
+  background: linear-gradient(135deg, var(--wood-100), var(--wood-200));
+  border: 2px solid var(--wood-300);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: inset 0 2px 4px rgba(93, 64, 55, 0.1);
+}
+
+.period-info {
   display: flex;
-  gap: 0.5rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
   flex-wrap: wrap;
+  gap: 1rem;
 }
 
-.date-input {
-  flex: 1;
-  min-width: 120px;
-}
-
-.quick-filters {
+.period-dates {
   display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
 }
 
-.quick-btn {
+.period-date {
+  background: linear-gradient(135deg, var(--wood-600), var(--wood-700));
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(93, 64, 55, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.period-separator {
+  color: var(--wood-700);
+  font-weight: 600;
+  font-style: italic;
+}
+
+.period-duration {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.6));
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  color: var(--wood-800);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid var(--wood-300);
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.period-duration i {
+  color: var(--wood-600) !important;
+  opacity: 1 !important;
+}
+
+.slider-container {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.slider-track {
+  position: relative;
+  height: 8px;
+  background: linear-gradient(135deg, var(--wood-300), var(--wood-400));
+  border-radius: 4px;
+  margin: 1rem 0;
+  border: 1px solid var(--wood-500);
+  box-shadow: inset 0 1px 3px rgba(93, 64, 55, 0.3);
+}
+
+.slider-range {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(135deg, var(--wood-600), var(--wood-700));
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(93, 64, 55, 0.3);
+}
+
+.slider-thumb {
+  position: absolute;
+  top: -8px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, var(--wood-700), var(--wood-800));
+  border: 3px solid white;
+  border-radius: 50%;
+  cursor: grab;
+  transform: translateX(-50%);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(93, 64, 55, 0.4);
+}
+
+.slider-thumb:hover {
+  transform: translateX(-50%) scale(1.2);
+  box-shadow: 0 4px 16px rgba(93, 64, 55, 0.6);
+}
+
+.slider-thumb:active {
+  cursor: grabbing;
+  transform: translateX(-50%) scale(1.1);
+}
+
+.thumb-tooltip {
+  position: absolute;
+  bottom: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--wood-800), var(--wood-900));
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
   font-size: 0.75rem;
-  padding: 0.25rem 0.75rem;
-  border-color: var(--wood-500);
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.thumb-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--wood-800);
+}
+
+.slider-thumb:hover .thumb-tooltip {
+  opacity: 1;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--wood-600);
+  font-weight: 500;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.current-month-btn {
+  border-color: var(--wood-600);
   color: var(--wood-600);
   font-family: 'Georgia', 'Times New Roman', serif;
   font-weight: 600;
@@ -383,17 +596,11 @@ onMounted(() => {
   letter-spacing: 0.5px;
 }
 
-.quick-btn:hover {
-  background: var(--wood-500);
+.current-month-btn:hover {
+  background: var(--wood-600);
   color: white;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(141, 110, 99, 0.3);
-}
-
-.filter-actions {
-  display: flex;
-  align-items: end;
-  justify-content: center;
 }
 
 @media (max-width: 1024px) {
@@ -402,19 +609,38 @@ onMounted(() => {
     gap: 1rem;
   }
   
-  .date-range-info {
+  .period-group {
+    grid-column: span 1;
+    min-width: auto;
+  }
+  
+  .period-info {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     text-align: center;
   }
   
-  .period-stats {
-    flex-direction: column;
-    gap: 1rem;
+  .period-dates {
+    justify-content: center;
   }
   
-  .slider-container {
-    margin: 1.5rem 0;
+  .filter-actions {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 768px) {
+  .period-slider-container {
+    padding: 1rem;
+  }
+  
+  .period-dates {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .period-separator {
+    display: none;
   }
   
   .slider-thumb {
@@ -424,8 +650,8 @@ onMounted(() => {
   }
   
   .thumb-tooltip {
-    top: -40px;
-    font-size: 0.65rem;
+    font-size: 0.7rem;
+    padding: 0.4rem 0.6rem;
   }
 }
 </style>
