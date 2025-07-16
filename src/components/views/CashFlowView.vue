@@ -166,7 +166,7 @@
                 :key="periodo.key"
                 :class="getPeriodCellClass(periodo, linha[periodo.key])"
                 class="value-cell"
-                @click="linha.isSaldoInicial ? null : showDetails(linha.categoria, periodo, linha[periodo.key])"
+                @click="showDetails(linha.categoria, periodo, linha[periodo.key])"
               >
                 <ValueDisplay 
                   :value="linha[periodo.key] || 0" 
@@ -241,6 +241,11 @@
             </thead>
             <tbody>
               <tr v-for="(item, index) in selectedDetails.items" :key="index">
+                <tr 
+                  v-for="(item, index) in selectedDetails.items" 
+                  :key="index"
+                  :class="{ 'saldo-inicial-row': item.isSaldoInicial }"
+                >
                 <td class="detail-titulo">{{ item.titulo }}</td>
                 <td class="detail-documento">{{ item.documento }}</td>
                 <td class="detail-nota">{{ item.notaFiscal || '-' }}</td>
@@ -264,7 +269,6 @@
                 <td class="detail-value">
                   <ValueDisplay :value="item.totalEmAberto || item.totalAberto || 0" type="currency" :class="getValueClass(item.totalEmAberto || item.totalAberto || 0)" />
                 </td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -366,9 +370,6 @@ const getPeriodCellClass = (periodo, valor) => {
 }
 
 const showDetails = async (categoria, periodo, valor) => {
-  // Não mostrar detalhes para saldo inicial
-  if (categoria.includes('SALDO INICIAL') || linhas.value.find(l => l.categoria === categoria)?.isSaldoInicial) return
-  
   if (valor === 0) return
   
   console.log('Clicou para ver detalhes:', { categoria, periodo: periodo.label, valor })
@@ -776,10 +777,12 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   cursor: pointer;
 }
 
-.clickable-value:hover {
+.clickable-value:hover,
+.saldo-inicial-value:hover {
   background: #007bff !important;
   color: white !important;
   transform: scale(1.05);
+  cursor: pointer;
 }
 
 .realizado-cell {
@@ -845,6 +848,8 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
   border-radius: 4px;
   padding: 0.25rem 0.5rem;
   border: 1px solid rgba(37, 99, 235, 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .saldo-inicial-value.total-saldo {
@@ -984,6 +989,21 @@ watch([dataInicio, dataFim, empresaSelecionada], updateData, { immediate: true }
 .detail-value {
   text-align: right;
   font-weight: 600;
+}
+
+.saldo-inicial-row {
+  background: rgba(37, 99, 235, 0.05) !important;
+  border-left: 3px solid #2563eb;
+}
+
+.saldo-inicial-row:hover {
+  background: rgba(37, 99, 235, 0.1) !important;
+}
+
+.saldo-inicial-row .detail-titulo,
+.saldo-inicial-row .detail-documento {
+  font-weight: 600;
+  color: #2563eb;
 }
 
 @media (max-width: 768px) {
