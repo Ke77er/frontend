@@ -240,11 +240,6 @@ export class DataProcessor {
   }
 
   getDetailsForPeriod(filteredData, categoria, periodo) {
-    // Verificar se é uma linha de saldo inicial
-    if (categoria.includes('💰')) {
-      return this.getDetailsForSaldoInicial(filteredData, categoria, periodo)
-    }
-    
     const detailsData = filteredData.filter(item => {
       const itemCategoria = `${item.categoria_erp_id} - ${item.categoria_erp_descricao}`
       if (itemCategoria !== categoria) return false
@@ -290,119 +285,6 @@ export class DataProcessor {
       }
       return new Date(a.data) - new Date(b.data)
     })
-  }
-
-  getDetailsForSaldoInicial(filteredData, categoria, periodo) {
-    // Extrair o nome da conta do formato "💰 Nome da Conta"
-    const nomeConta = categoria.replace('💰 ', '')
-    
-    // Se for o total do saldo inicial, mostrar todas as contas
-    if (nomeConta === 'TOTAL SALDO INICIAL') {
-      return this.getDetailsForTotalSaldoInicial(filteredData, periodo)
-    }
-    
-    // Buscar dados anteriores ao período para esta conta específica
-    const dadosAnteriores = filteredData.filter(item => {
-      const dataItem = new Date(item.data_ymd)
-      const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
-      
-      // Dados anteriores ao período selecionado para esta conta
-      const isAnterior = dataItem < new Date(periodo.date)
-      return isAnterior && contaItem === nomeConta
-    })
-    
-    // Buscar dados do período atual para esta conta (para calcular saldo acumulado)
-    const dadosPeriodo = filteredData.filter(item => {
-      const dataItem = new Date(item.data_ymd)
-      const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
-      return contaItem === nomeConta && this.itemBelongsToPeriod(item, dataItem, periodo)
-    })
-    
-    // Combinar dados anteriores e do período
-    const todosOsDados = [...dadosAnteriores, ...dadosPeriodo]
-    
-    return todosOsDados.map((item, index) => {
-      const dataItem = new Date(item.data_ymd)
-      const isRealizado = item.baixado === true || item.baixado === 1
-      const isAnterior = dataItem < new Date(periodo.date)
-      
-      let status = 'Previsto'
-      if (isRealizado) {
-        status = 'Realizado'
-      } else if (isAnterior) {
-        status = 'Saldo Anterior'
-      }
-      
-      return {
-        titulo: `${isAnterior ? 'Saldo Anterior' : 'Movimentação'} - ${item.categoria_erp_descricao}`,
-        documento: `${isAnterior ? 'SALDO' : 'MOV'} ${String(1000 + index).padStart(4, '0')}`,
-        notaFiscal: isAnterior ? 'Saldo Inicial' : `NF ${String(20250000 + index).padStart(8, '0')}`,
-        data: item.data_ymd,
-        emissao: item.data_ymd,
-        previsao: isRealizado ? null : item.data_ymd,
-        pessoa: item.pessoa_erp_descricao,
-        projeto: item.categoria_erp_descricao,
-        valor: item.valor,
-        valorBruto: item.valor,
-        totalAberto: isRealizado ? 0 : item.valor,
-        totalEmAberto: isRealizado ? 0 : item.valor,
-        status: status,
-        observacoes: isAnterior ? `Saldo inicial da conta ${nomeConta}` : (item.observacoes || ''),
-        baixado: isRealizado,
-        isSaldoInicial: isAnterior
-      }
-    }).sort((a, b) => {
-      // Ordenar por data, com saldos anteriores primeiro
-      if (a.isSaldoInicial && !b.isSaldoInicial) return -1
-      if (!a.isSaldoInicial && b.isSaldoInicial) return 1
-      return new Date(a.data) - new Date(b.data)
-    })
-  }
-  
-  getDetailsForTotalSaldoInicial(filteredData, periodo) {
-    // Buscar todas as contas que têm saldo inicial
-    const todasAsContas = new Set()
-    
-    filteredData.forEach(item => {
-      const conta = item.conta_financeira_erp_descricao || 'Conta não informada'
-      todasAsContas.add(conta)
-    })
-    
-    const detalhesTotais = []
-    
-    todasAsContas.forEach(conta => {
-      // Calcular saldo inicial para cada conta
-      const dadosAnteriores = filteredData.filter(item => {
-        const dataItem = new Date(item.data_ymd)
-        const contaItem = item.conta_financeira_erp_descricao || 'Conta não informada'
-        return dataItem < new Date(periodo.date) && contaItem === conta
-      })
-      
-      const saldoInicial = dadosAnteriores.reduce((sum, item) => sum + item.valor, 0)
-      
-      if (saldoInicial !== 0) {
-        detalhesTotais.push({
-          titulo: `Saldo Inicial - ${conta}`,
-          documento: `SALDO-${conta.substring(0, 4).toUpperCase()}`,
-          notaFiscal: 'Consolidado',
-          data: periodo.date,
-          emissao: periodo.date,
-          previsao: null,
-          pessoa: 'Sistema',
-          projeto: 'Saldo Inicial',
-          valor: saldoInicial,
-          valorBruto: saldoInicial,
-          totalAberto: 0,
-          totalEmAberto: 0,
-          status: 'Saldo Consolidado',
-          observacoes: `Saldo inicial consolidado da conta ${conta} até ${new Date(periodo.date).toLocaleDateString('pt-BR')}`,
-          baixado: true,
-          isSaldoInicial: true
-        })
-      }
-    })
-    
-    return detalhesTotais.sort((a, b) => b.valor - a.valor)
   }
 
   processOverdueData(filteredData, tipo) {
