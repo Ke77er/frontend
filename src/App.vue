@@ -126,7 +126,7 @@ const goHome = () => {
 <style scoped>
 .app-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 50%, #ddeeff 100%);
+  background: linear-gradient(135deg, var(--background-light) 0%, var(--neutral-100) 50%, var(--neutral-200) 100%);
 }
 
 .main-content {
@@ -152,11 +152,11 @@ const goHome = () => {
 }
 
 .welcome-content {
-  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 50%, var(--secondary-color) 100%);
   color: white;
   padding: 2rem;
   border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(30, 64, 175, 0.3);
+  box-shadow: 0 12px 32px rgba(139, 115, 85, 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -187,7 +187,8 @@ const goHome = () => {
 }
 
 .welcome-title {
-  font-size: 2rem;
+  font-family: var(--font-display);
+  font-size: 2.2rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
@@ -198,6 +199,7 @@ const goHome = () => {
   margin: 0;
   opacity: 0.9;
   font-weight: 300;
+  font-family: var(--font-primary);
 }
 
 /* Grid de Navegação Compacta */
@@ -210,10 +212,10 @@ const goHome = () => {
 }
 
 .nav-card {
-  background: white;
+  background: var(--background-card);
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 6px 24px rgba(30, 64, 175, 0.12);
+  box-shadow: 0 6px 24px rgba(139, 115, 85, 0.12);
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border: 2px solid transparent;
@@ -226,8 +228,8 @@ const goHome = () => {
 
 .nav-card:hover {
   transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 12px 40px rgba(30, 64, 175, 0.2);
-  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 12px 40px rgba(139, 115, 85, 0.2);
+  border-color: rgba(139, 115, 85, 0.3);
 }
 
 .nav-card-icon {
@@ -244,18 +246,18 @@ const goHome = () => {
 }
 
 .cashflow-card .nav-card-icon {
-  background: linear-gradient(135deg, #1e40af, #3b82f6);
-  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+  box-shadow: 0 6px 20px rgba(139, 115, 85, 0.4);
 }
 
 .overdue-card .nav-card-icon {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+  background: linear-gradient(135deg, var(--danger-color), var(--danger-light));
+  box-shadow: 0 6px 20px rgba(184, 133, 107, 0.4);
 }
 
 .rawdata-card .nav-card-icon {
-  background: linear-gradient(135deg, #059669, #10b981);
-  box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
+  background: linear-gradient(135deg, var(--info-color), var(--info-light));
+  box-shadow: 0 6px 20px rgba(139, 154, 139, 0.4);
 }
 
 .nav-card:hover .nav-card-icon {
@@ -267,14 +269,15 @@ const goHome = () => {
 }
 
 .nav-card-content h3 {
+  font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1e293b;
+  color: var(--neutral-700);
   margin: 0 0 0.5rem 0;
 }
 
 .nav-card-content p {
-  color: #64748b;
+  color: var(--neutral-500);
   margin: 0 0 0.75rem 0;
   font-size: 0.9rem;
   line-height: 1.4;
@@ -287,32 +290,32 @@ const goHome = () => {
 }
 
 .feature-tag {
-  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-  color: #475569;
+  background: linear-gradient(135deg, var(--accent-color), var(--neutral-200));
+  color: var(--neutral-600);
   padding: 0.2rem 0.6rem;
   border-radius: 16px;
   font-size: 0.7rem;
   font-weight: 500;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--neutral-200);
   transition: all 0.3s ease;
 }
 
 .nav-card:hover .feature-tag {
-  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-  color: #1e40af;
-  border-color: #3b82f6;
+  background: linear-gradient(135deg, var(--secondary-light), var(--secondary-color));
+  color: var(--primary-color);
+  border-color: var(--primary-light);
 }
 
 .nav-card-arrow {
   font-size: 1.25rem;
-  color: #3b82f6;
+  color: var(--primary-light);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
 .nav-card:hover .nav-card-arrow {
   transform: translateX(6px) scale(1.2);
-  color: #1e40af;
+  color: var(--primary-color);
 }
 
 /* Conteúdo das Views */
@@ -328,21 +331,22 @@ const goHome = () => {
 }
 
 .home-btn {
-  border-color: #3b82f6;
-  color: #3b82f6;
+  border-color: var(--primary-light);
+  color: var(--primary-light);
   transition: all 0.3s ease;
 }
 
 .home-btn:hover {
-  background: #3b82f6;
+  background: var(--primary-light);
   color: white;
   transform: translateY(-2px);
 }
 
 .current-view-title {
+  font-family: var(--font-display);
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1e40af;
+  color: var(--primary-color);
   margin: 0;
 }
 
@@ -397,7 +401,7 @@ const goHome = () => {
   }
   
   .welcome-title {
-    font-size: 1.75rem;
+    font-size: 1.9rem;
   }
   
   .view-header {

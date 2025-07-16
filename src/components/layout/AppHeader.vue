@@ -34,7 +34,7 @@ const { name, subtitle } = APP_CONFIG
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
   color: white;
   padding: 2rem 0;
-  box-shadow: 0 4px 20px rgba(26, 54, 93, 0.15);
+  box-shadow: 0 4px 20px rgba(139, 115, 85, 0.15);
 }
 
 .container {
@@ -63,6 +63,7 @@ const { name, subtitle } = APP_CONFIG
 }
 
 .brand-title {
+  font-family: var(--font-display);
   font-size: 2.5rem;
   font-weight: 700;
   margin: 0;
@@ -71,6 +72,7 @@ const { name, subtitle } = APP_CONFIG
 }
 
 .brand-subtitle {
+  font-family: var(--font-primary);
   font-size: 1.1rem;
   margin: 0;
   opacity: 0.9;

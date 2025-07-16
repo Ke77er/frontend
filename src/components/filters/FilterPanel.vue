@@ -168,15 +168,15 @@ onMounted(() => {
 
 <style scoped>
 .filter-panel {
-  background: white;
+  background: var(--background-card);
   border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(26, 54, 93, 0.08);
+  box-shadow: 0 2px 12px rgba(139, 115, 85, 0.08);
   overflow: hidden;
   margin-bottom: 1.5rem;
 }
 
 .filter-header {
-  background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+  background: linear-gradient(135deg, var(--accent-color) 0%, var(--neutral-100) 100%);
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--neutral-200);
   cursor: pointer;
@@ -187,7 +187,7 @@ onMounted(() => {
 }
 
 .filter-header:hover {
-  background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, var(--neutral-100) 0%, var(--neutral-200) 100%);
 }
 
 .filter-title {
@@ -197,6 +197,7 @@ onMounted(() => {
   font-weight: 600;
   color: var(--primary-color);
   font-size: 1rem;
+  font-family: var(--font-primary);
 }
 
 .toggle-btn {
@@ -231,6 +232,7 @@ onMounted(() => {
   font-weight: 600;
   color: var(--neutral-600);
   font-size: 0.875rem;
+  font-family: var(--font-primary);
 }
 
 .filter-control {
