@@ -62,7 +62,6 @@ const valueClass = computed(() => {
 
 <style scoped>
 .value-display {
-  font-family: var(--font-primary);
   font-weight: 500;
   transition: all 0.2s ease;
 }

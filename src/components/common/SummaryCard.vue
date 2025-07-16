@@ -51,10 +51,10 @@ const cardClass = computed(() => `summary-card--${props.color}`)
 
 <style scoped>
 .summary-card {
-  background: var(--background-card);
+  background: white;
   border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 2px 12px rgba(139, 115, 85, 0.1);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -64,27 +64,27 @@ const cardClass = computed(() => `summary-card--${props.color}`)
 
 .summary-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(139, 115, 85, 0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .summary-card--primary {
-  border-left-color: var(--primary-color);
+  border-left-color: #3b82f6;
 }
 
 .summary-card--success {
-  border-left-color: var(--success-color);
+  border-left-color: #10b981;
 }
 
 .summary-card--warning {
-  border-left-color: var(--warning-color);
+  border-left-color: #f59e0b;
 }
 
 .summary-card--danger {
-  border-left-color: var(--danger-color);
+  border-left-color: #ef4444;
 }
 
 .summary-card--info {
-  border-left-color: var(--info-color);
+  border-left-color: #06b6d4;
 }
 
 .card-icon {
@@ -99,23 +99,23 @@ const cardClass = computed(() => `summary-card--${props.color}`)
 }
 
 .summary-card--primary .card-icon {
-  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
 }
 
 .summary-card--success .card-icon {
-  background: linear-gradient(135deg, var(--success-color), var(--success-dark));
+  background: linear-gradient(135deg, #10b981, #059669);
 }
 
 .summary-card--warning .card-icon {
-  background: linear-gradient(135deg, var(--warning-color), var(--warning-dark));
+  background: linear-gradient(135deg, #f59e0b, #d97706);
 }
 
 .summary-card--danger .card-icon {
-  background: linear-gradient(135deg, var(--danger-color), var(--danger-dark));
+  background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
 .summary-card--info .card-icon {
-  background: linear-gradient(135deg, var(--info-color), var(--info-dark));
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
 }
 
 .card-content {
@@ -124,23 +124,20 @@ const cardClass = computed(() => `summary-card--${props.color}`)
 
 .card-title {
   font-size: 0.9rem;
-  color: var(--neutral-500);
+  color: #64748b;
   margin-bottom: 0.25rem;
   font-weight: 500;
-  font-family: var(--font-primary);
 }
 
 .card-value {
-  font-family: var(--font-primary);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--neutral-700);
+  color: #1e293b;
 }
 
 .numeric-value {
-  font-family: var(--font-primary);
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--neutral-700);
+  color: #1e293b;
 }
 </style>
