@@ -117,24 +117,29 @@ const cardClass = computed(() => `summary-card--${props.color}`)
     inset 0 2px 4px rgba(255, 255, 255, 0.2);
 }
 
+.card-icon i {
+  color: white !important;
+  opacity: 1 !important;
+}
+
 .summary-card--primary .card-icon {
-  background: linear-gradient(135deg, var(--wood-600), var(--wood-700));
+  background: linear-gradient(135deg, #a1887f, #8d6e63);
 }
 
 .summary-card--success .card-icon {
-  background: linear-gradient(135deg, var(--success-color), var(--success-dark));
+  background: linear-gradient(135deg, #558b2f, #33691e);
 }
 
 .summary-card--warning .card-icon {
-  background: linear-gradient(135deg, var(--warning-color), var(--warning-dark));
+  background: linear-gradient(135deg, #ff8f00, #e65100);
 }
 
 .summary-card--danger .card-icon {
-  background: linear-gradient(135deg, var(--danger-color), var(--danger-dark));
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
 }
 
 .summary-card--info .card-icon {
-  background: linear-gradient(135deg, var(--info-color), var(--info-dark));
+  background: linear-gradient(135deg, #455a64, #263238);
 }
 
 .card-content {

@@ -295,18 +295,23 @@ const goHome = () => {
     inset 0 2px 4px rgba(255, 255, 255, 0.2);
 }
 
+.nav-card-icon i {
+  color: white !important;
+  opacity: 1 !important;
+}
+
 .cashflow-card .nav-card-icon {
-  background: linear-gradient(135deg, var(--wood-600), var(--wood-700));
+  background: linear-gradient(135deg, #a1887f, #8d6e63);
   box-shadow: 0 6px 20px rgba(141, 110, 99, 0.4);
 }
 
 .overdue-card .nav-card-icon {
-  background: linear-gradient(135deg, var(--danger-color), var(--danger-dark));
+  background: linear-gradient(135deg, #d32f2f, #b71c1c);
   box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
 }
 
 .rawdata-card .nav-card-icon {
-  background: linear-gradient(135deg, var(--info-color), var(--info-dark));
+  background: linear-gradient(135deg, #455a64, #263238);
   box-shadow: 0 6px 20px rgba(69, 90, 100, 0.4);
 }
 

@@ -80,13 +80,13 @@ const { name, subtitle } = APP_CONFIG
 .brand-icon {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, var(--wood-400), var(--wood-500));
+  background: linear-gradient(135deg, #d4c4a8, #c8b99c);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 2.5rem;
-  color: var(--primary-dark);
+  color: #3e2723;
   border: 3px solid rgba(255, 255, 255, 0.2);
   box-shadow: 
     0 4px 16px rgba(0, 0, 0, 0.3),
@@ -116,6 +116,11 @@ const { name, subtitle } = APP_CONFIG
   color: white;
   font-family: 'Georgia', 'Times New Roman', serif;
   letter-spacing: 1px;
+}
+
+.brand-icon i {
+  color: #3e2723 !important;
+  opacity: 1 !important;
 }
 
 .brand-subtitle {

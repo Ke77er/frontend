@@ -214,15 +214,25 @@ onMounted(() => {
   align-items: center;
   gap: 0.75rem;
   font-weight: 600;
-  color: var(--primary-color);
+  color: #5d4037;
   font-size: 1.1rem;
   font-family: 'Georgia', 'Times New Roman', serif;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
+.filter-title i {
+  color: #5d4037 !important;
+  opacity: 1 !important;
+}
+
 .toggle-btn {
-  color: var(--wood-600);
+  color: #a1887f !important;
+}
+
+.toggle-btn i {
+  color: #a1887f !important;
+  opacity: 1 !important;
 }
 
 .filter-content {
