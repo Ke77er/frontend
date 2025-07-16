@@ -241,11 +241,8 @@
             </thead>
             <tbody>
               <tr v-for="(item, index) in selectedDetails.items" :key="index">
-                <tr 
-                  v-for="(item, index) in selectedDetails.items" 
-                  :key="index"
-                  :class="{ 'saldo-inicial-row': item.isSaldoInicial }"
-                >
+                :class="{ 'saldo-inicial-row': item.isSaldoInicial }"
+              >
                 <td class="detail-titulo">{{ item.titulo }}</td>
                 <td class="detail-documento">{{ item.documento }}</td>
                 <td class="detail-nota">{{ item.notaFiscal || '-' }}</td>
