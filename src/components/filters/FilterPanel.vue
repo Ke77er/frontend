@@ -37,11 +37,11 @@
               <div class="period-stats">
                 <div class="stat-item">
                   <i class="pi pi-calendar"></i>
-                  <span>{{ periodStats.days }} dias</span>
+                  <span>{{ periodStats?.days || 0 }} dias</span>
                 </div>
                 <div class="stat-item">
                   <i class="pi pi-clock"></i>
-                  <span>{{ periodStats.months }} meses</span>
+                  <span>{{ periodStats?.months || 0 }} meses</span>
                 </div>
               </div>
               <div class="date-display">
