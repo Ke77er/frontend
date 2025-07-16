@@ -7,7 +7,7 @@ export const formatDate = (date, formatStr = 'dd/MM/yyyy') => {
     const parsedDate = typeof date === 'string' ? parseISO(date) : date
     return format(parsedDate, formatStr, { locale: ptBR })
   } catch {
-    return date
+    return String(date)
   }
 }
 

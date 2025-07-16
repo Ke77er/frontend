@@ -170,6 +170,47 @@ const activeFiltersCount = computed(() => {
   return count
 })
 
+// Estatísticas do período selecionado
+const periodStats = computed(() => {
+  if (!dataInicio.value || !dataFim.value) {
+    return { days: 0, months: 0 }
+  }
+  
+  const days = differenceInDays(dataFim.value, dataInicio.value) + 1
+  const months = Math.round(differenceInMonths(dataFim.value, dataInicio.value) * 10) / 10
+  
+  return {
+    days,
+    months: months || 0.1
+  }
+})
+
+// Posições dos thumbs do slider
+const startThumbPosition = computed(() => {
+  if (!minDate.value || !maxDate.value || !dataInicio.value) return '0%'
+  
+  const totalDays = differenceInDays(maxDate.value, minDate.value)
+  const startDays = differenceInDays(dataInicio.value, minDate.value)
+  
+  return `${(startDays / totalDays) * 100}%`
+})
+
+const endThumbPosition = computed(() => {
+  if (!minDate.value || !maxDate.value || !dataFim.value) return '100%'
+  
+  const totalDays = differenceInDays(maxDate.value, minDate.value)
+  const endDays = differenceInDays(dataFim.value, minDate.value)
+  
+  return `${(endDays / totalDays) * 100}%`
+})
+
+const sliderRangeStyle = computed(() => {
+  return {
+    left: startThumbPosition.value,
+    width: `calc(${endThumbPosition.value} - ${startThumbPosition.value})`
+  }
+})
+
 const toggleExpanded = () => {
   isExpanded.value = !isExpanded.value
 }
@@ -191,32 +232,19 @@ const updateOptions = () => {
   contas.value = getUniqueAccounts()
 }
 
-watch(empresaSelecionada, () => {
-  updateOptions()
-  detectDateRange()
-})
+watch(empresaSelecionada, updateOptions)
 
-watch(data, detectDateRange)
 onMounted(() => {
   empresas.value = getAvailableCompanies()
   if (empresas.value.length > 0 && !empresaSelecionada.value) {
     empresaSelecionada.value = empresas.value[0].value
   }
   
-  detectDateRange()
-  
   if (!dataInicio.value) {
-    resetToCurrentMonth()
+    setQuickFilter('mes')
   }
   
   updateOptions()
-})
-
-onUnmounted(() => {
-  document.removeEventListener('mousemove', handleDrag)
-  document.removeEventListener('mouseup', stopDrag)
-  document.removeEventListener('touchmove', handleDrag)
-  document.removeEventListener('touchend', stopDrag)
 })
 </script>
 
@@ -374,12 +402,30 @@ onUnmounted(() => {
     gap: 1rem;
   }
   
-  .date-controls {
+  .date-range-info {
     flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
   
-  .date-input {
-    min-width: 100%;
+  .period-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .slider-container {
+    margin: 1.5rem 0;
+  }
+  
+  .slider-thumb {
+    width: 28px;
+    height: 28px;
+    top: -10px;
+  }
+  
+  .thumb-tooltip {
+    top: -40px;
+    font-size: 0.65rem;
   }
 }
 </style>
